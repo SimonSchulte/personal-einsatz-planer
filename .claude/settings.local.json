@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx ng:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(xargs grep:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "WebFetch(domain:material.angular.io)",
+      "WebFetch(domain:material.angular.dev)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:trailheadtechnology.com)",
+      "WebFetch(domain:prototyp.digital)",
+      "WebFetch(domain:angular.love)",
+      "WebFetch(domain:angular-material.dev)",
+      "Bash(git restore:*)"
+    ]
+  }
+}
