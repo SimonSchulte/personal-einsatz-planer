@@ -1,12 +1,10 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.less'
+  template: '<router-outlet />',
+  styles: [':host { display: flex; flex-direction: column; height: 100vh; }'],
 })
-export class App {
-  protected readonly title = signal('personal-einsatz-planer');
-}
+export class App {}

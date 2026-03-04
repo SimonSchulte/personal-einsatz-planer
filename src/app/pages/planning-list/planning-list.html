@@ -1,0 +1,40 @@
+<mat-toolbar color="primary">
+  <mat-icon>assignment</mat-icon>
+  <span style="margin-left: 8px">Personaleinsatzplanung</span>
+  <span class="spacer"></span>
+  <button mat-raised-button (click)="createNew()">
+    <mat-icon>add</mat-icon>
+    Neue Planung
+  </button>
+</mat-toolbar>
+
+<div class="list-content">
+  <h2>Planungen</h2>
+
+  @if (planungen().length === 0) {
+    <p class="empty-hint">Noch keine Planungen vorhanden. Erstelle eine neue Planung.</p>
+  }
+
+  <div class="card-grid">
+    @for (planung of planungen(); track planung.id) {
+      <mat-card class="planung-card" (click)="openPlanung(planung.id)">
+        <mat-card-header>
+          <mat-card-title>{{ planung.name }}</mat-card-title>
+          <mat-card-subtitle>
+            {{ planung.start | date: 'dd.MM.yyyy HH:mm' : '' : 'de-DE' }} –
+            {{ planung.end | date: 'HH:mm' : '' : 'de-DE' }} Uhr
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p>{{ planung.posten.length }} Posten · {{ planung.einsatzkraefte.length }} Einsatzkräfte</p>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button color="primary" (click)="openPlanung(planung.id); $event.stopPropagation()">
+            <mat-icon>open_in_new</mat-icon>
+            Öffnen
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+</div>

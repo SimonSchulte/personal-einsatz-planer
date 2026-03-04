@@ -1,0 +1,367 @@
+@if (planung(); as p) {
+  <div class="editor-shell">
+    <!-- Top Bar -->
+    <mat-toolbar color="primary" class="editor-toolbar">
+      <button mat-icon-button (click)="goBack()" matTooltip="Zurück zur Übersicht">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <span class="planung-name">{{ p.name }}</span>
+      <span class="date-range">
+        {{ p.start | date: 'dd.MM.yyyy HH:mm' : '' : 'de-DE' }} –
+        {{ p.end | date: 'dd.MM.yyyy HH:mm' : '' : 'de-DE' }}
+      </span>
+      <div class="einsatzleiter-field">
+        <span class="einsatzleiter-label">EinsatzleiterIn</span>
+        <mat-select class="einsatzleiter-select" [value]="p.einsatzleiter?.id ?? null" (selectionChange)="setEinsatzleiter($event.value)">
+          <mat-option [value]="null">– Keine –</mat-option>
+          @for (ek of p.einsatzkraefte; track ek.id) {
+            <mat-option [value]="ek.id">{{ ek.name }}</mat-option>
+          }
+        </mat-select>
+      </div>
+      <span class="spacer"></span>
+      <button mat-icon-button matTooltip="Speichern">
+        <mat-icon>save</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="PDF exportieren">
+        <mat-icon>picture_as_pdf</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <!-- Three-pane layout -->
+    <div class="editor-body" cdkDropListGroup>
+      <!-- LEFT: Roster -->
+      <aside class="pane pane-roster">
+        <div class="pane-header">
+          <mat-icon>people</mat-icon>
+          <span>Einsatzkräfte ({{ p.einsatzkraefte.length }})</span>
+        </div>
+        <div class="roster-list"
+             cdkDropList
+             cdkDropListSortingDisabled
+             (cdkDropListDropped)="onDropToRoster($event)">
+          @for (person of unassignedRoster(p); track person.id) {
+            <div class="einsatzkraft-card available"
+                 cdkDrag
+                 [cdkDragData]="{ einsatzkraftId: person.id, fromPostenId: null, fromPositionId: null }"
+                 (cdkDragStarted)="onDragStarted($event)"
+                 (cdkDragEnded)="onDragEnded()">
+              <span class="ek-name">{{ person.name }}</span>
+              <div class="ek-chips">
+                @for (tag of person.tags.taktisch ?? []; track tag) {
+                  <span
+                    class="tag-chip"
+                    [style.background]="taktischColor(tag).bg"
+                    [style.color]="taktischColor(tag).fg"
+                    [style.border]="tag === 'VF' ? '1px solid #000548' : 'none'"
+                    [matTooltip]="TAKTISCH_LABEL[tag]"
+                  >{{ tag }}</span>
+                }
+                @for (tag of person.tags.medizinisch ?? []; track tag) {
+                  <span
+                    class="tag-chip"
+                    [style.background]="medizinischColor(tag).bg"
+                    [style.color]="medizinischColor(tag).fg"
+                    [matTooltip]="MEDIZINISCH_LABEL[tag]"
+                  >{{ tag }}</span>
+                }
+                @for (tag of person.tags.zusatz ?? []; track tag) {
+                  <span class="tag-chip tag-zusatz">{{ tag }}</span>
+                }
+              </div>
+            </div>
+          }
+          @if (unassignedRoster(p).length === 0) {
+            <p class="empty-hint">Alle Einsatzkräfte sind eingeteilt.</p>
+          }
+
+          <mat-divider style="margin: 12px 0"></mat-divider>
+          <div class="pane-subheader pane-subheader--toggle" (click)="toggleAssignedList()">
+            <span>Zugewiesene Einsatzkräfte</span>
+            <mat-icon class="subheader-toggle-icon">{{ assignedListCollapsed() ? 'expand_more' : 'expand_less' }}</mat-icon>
+          </div>
+          @if (!assignedListCollapsed()) {
+            @for (person of p.einsatzkraefte; track person.id) {
+              <div class="einsatzkraft-card">
+                <span class="ek-name">{{ person.name }}</span>
+                <div class="ek-chips">
+                  @for (tag of person.tags.taktisch ?? []; track tag) {
+                    <span
+                      class="tag-chip"
+                      [style.background]="taktischColor(tag).bg"
+                      [style.color]="taktischColor(tag).fg"
+                      [style.border]="tag === 'VF' ? '1px solid #000548' : 'none'"
+                    >{{ tag }}</span>
+                  }
+                  @for (tag of person.tags.medizinisch ?? []; track tag) {
+                    <span
+                      class="tag-chip"
+                      [style.background]="medizinischColor(tag).bg"
+                      [style.color]="medizinischColor(tag).fg"
+                    >{{ tag }}</span>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </aside>
+
+      <!-- CENTER: Posten/Position Tree -->
+      <main class="pane pane-tree">
+        <div class="pane-header">
+          <mat-icon>account_tree</mat-icon>
+          <span>Einsatzplan</span>
+          <span class="spacer"></span>
+          <div class="staerke-block">
+            <div class="staerke-row ist">
+              <span class="staerke-label">Ist</span>
+              <span class="staerke-num" [class]="staerkeStatus(planungIst(p).fuhrer, planungSoll(p).fuhrer)">{{ planungIst(p).fuhrer }}</span>
+              <span class="staerke-sep">/</span>
+              <span class="staerke-num" [class]="staerkeStatus(planungIst(p).unterfuehrer, planungSoll(p).unterfuehrer)">{{ planungIst(p).unterfuehrer }}</span>
+              <span class="staerke-sep">/</span>
+              <span class="staerke-num" [class]="staerkeStatus(planungIst(p).helfer, planungSoll(p).helfer)">{{ planungIst(p).helfer }}</span>
+              <span class="staerke-sep">/</span>
+              <span class="staerke-num" [class]="staerkeStatus(planungIst(p).gesamt, planungSoll(p).gesamt)"><u>{{ planungIst(p).gesamt }}</u></span>
+            </div>
+            <div class="staerke-row soll">
+              <span class="staerke-label">Soll</span>
+              <span class="staerke-num">{{ planungSoll(p).fuhrer }}</span>
+              <span class="staerke-sep">/</span>
+              <span class="staerke-num">{{ planungSoll(p).unterfuehrer }}</span>
+              <span class="staerke-sep">/</span>
+              <span class="staerke-num">{{ planungSoll(p).helfer }}</span>
+              <span class="staerke-sep">/</span>
+              <span class="staerke-num"><u>{{ planungSoll(p).gesamt }}</u></span>
+            </div>
+          </div>
+        </div>
+        <div class="tree-scroll">
+        <mat-accordion multi class="posten-accordion">
+          @for (posten of p.posten; track posten.id) {
+            <mat-expansion-panel #panel expanded hideToggle>
+              <mat-expansion-panel-header>
+                <mat-panel-title (click)="selectPosten(posten); $event.stopPropagation()">
+                  {{ posten.label }}
+                  @if (posten.fahrzeug) {
+                    <span class="posten-fahrzeug-text">{{ posten.fahrzeug.funkruf }}</span>
+                  }
+                </mat-panel-title>
+                <mat-panel-description (click)="$event.stopPropagation()">
+                  <div class="staerke-block compact description-spacer">
+                    <div class="staerke-row ist">
+                      <span class="staerke-label">Ist</span>
+                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).fuhrer, postenSoll(posten).fuhrer)">{{ postenIst(posten).fuhrer }}</span>
+                      <span class="staerke-sep">/</span>
+                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).unterfuehrer, postenSoll(posten).unterfuehrer)">{{ postenIst(posten).unterfuehrer }}</span>
+                      <span class="staerke-sep">/</span>
+                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).helfer, postenSoll(posten).helfer)">{{ postenIst(posten).helfer }}</span>
+                      <span class="staerke-sep">/</span>
+                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).gesamt, postenSoll(posten).gesamt)"><u>{{ postenIst(posten).gesamt }}</u></span>
+                    </div>
+                    <div class="staerke-row soll">
+                      <span class="staerke-label">Soll</span>
+                      <span class="staerke-num">{{ postenSoll(posten).fuhrer }}</span>
+                      <span class="staerke-sep">/</span>
+                      <span class="staerke-num">{{ postenSoll(posten).unterfuehrer }}</span>
+                      <span class="staerke-sep">/</span>
+                      <span class="staerke-num">{{ postenSoll(posten).helfer }}</span>
+                      <span class="staerke-sep">/</span>
+                      <span class="staerke-num"><u>{{ postenSoll(posten).gesamt }}</u></span>
+                    </div>
+                  </div>
+                  <button mat-icon-button class="posten-action-btn" matTooltip="Leeren"
+                    (click)="clearPosten(posten)">
+                    <mat-icon>cleaning_services</mat-icon>
+                  </button>
+                  <button mat-icon-button class="posten-action-btn" matTooltip="Posten löschen"
+                    (click)="deletePosten(posten)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                  <button mat-icon-button class="posten-action-btn"
+                    [matTooltip]="panel.expanded ? 'Einklappen' : 'Ausklappen'"
+                    (click)="panel.toggle()">
+                    <mat-icon>{{ panel.expanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+                  </button>
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="position-list">
+                @for (position of posten.positions; track position.id) {
+                  <div
+                    class="position-row"
+                    [class.selected]="selectedPosition?.position?.id === position.id"
+                    (click)="selectPosition(posten, position)"
+                  >
+                    <div class="position-label">{{ position.label }}</div>
+                    <div class="position-reqs">
+                      @if (position.requirements.taktisch) {
+                        <span
+                          class="tag-chip req-chip"
+                          [style.background]="taktischColor(position.requirements.taktisch).bg"
+                          [style.color]="taktischColor(position.requirements.taktisch).fg"
+                          [style.border]="position.requirements.taktisch === 'VF' ? '1px solid #000548' : 'none'"
+                          [matTooltip]="TAKTISCH_LABEL[position.requirements.taktisch]"
+                        >{{ position.requirements.taktisch }}</span>
+                      } @else {
+                        <span class="tag-chip req-chip req-any">–</span>
+                      }
+                      @if (position.requirements.medizinisch) {
+                        <span
+                          class="tag-chip req-chip"
+                          [style.background]="medizinischColor(position.requirements.medizinisch).bg"
+                          [style.color]="medizinischColor(position.requirements.medizinisch).fg"
+                          [matTooltip]="MEDIZINISCH_LABEL[position.requirements.medizinisch]"
+                        >{{ position.requirements.medizinisch }}</span>
+                      } @else {
+                        <span class="tag-chip req-chip req-any">–</span>
+                      }
+                    </div>
+                    <div class="position-assigned"
+                         cdkDropList
+                         cdkDropListSortingDisabled
+                         [cdkDropListData]="{ postenId: posten.id, positionId: position.id }"
+                         [class]="'match-' + positionMatchClass(position, draggingEinsatzkraft() ?? assignedPerson(position))"
+                         (cdkDropListDropped)="onDropToPosition($event)">
+                      @if (position.assigned) {
+                        <div cdkDrag
+                             [cdkDragData]="{ einsatzkraftId: position.assigned.id, fromPostenId: posten.id, fromPositionId: position.id }"
+                             (cdkDragStarted)="onDragStarted($event)"
+                             (cdkDragEnded)="onDragEnded()"
+                             class="assigned-drag-item">
+                          <mat-icon class="assign-icon">person</mat-icon>
+                          <div class="assigned-name-block">
+                            <span>{{ position.assigned.name }}</span>
+                            @if (assignedPerson(position); as person) {
+                              <div class="assigned-chips">
+                                @for (tag of person.tags.taktisch ?? []; track tag) {
+                                  <span class="tag-chip tag-chip--sm" [style.background]="taktischColor(tag).bg" [style.color]="taktischColor(tag).fg" [matTooltip]="TAKTISCH_LABEL[tag]">{{ tag }}</span>
+                                }
+                                @for (tag of person.tags.medizinisch ?? []; track tag) {
+                                  <span class="tag-chip tag-chip--sm" [style.background]="medizinischColor(tag).bg" [style.color]="medizinischColor(tag).fg" [matTooltip]="MEDIZINISCH_LABEL[tag]">{{ tag }}</span>
+                                }
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      } @else {
+                        <mat-icon class="assign-icon unassigned">person_add</mat-icon>
+                        <span class="unassigned-label">Nicht besetzt</span>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+        <div class="add-posten-row">
+          <button mat-stroked-button (click)="addPosten()">
+            <mat-icon>add</mat-icon> Neuer Posten
+          </button>
+        </div>
+        </div>
+      </main>
+
+      <!-- RIGHT: Inspector -->
+      <aside class="pane pane-inspector" [class.collapsed]="inspectorCollapsed()">
+        <div class="pane-header">
+          <button mat-icon-button class="collapse-btn" (click)="toggleInspector()"
+            [matTooltip]="inspectorCollapsed() ? 'Details einblenden' : 'Details ausblenden'">
+            <mat-icon>{{ inspectorCollapsed() ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+          </button>
+          @if (!inspectorCollapsed()) {
+            <mat-icon>info</mat-icon>
+            <span>Details</span>
+          }
+        </div>
+        @if (selectedPosten) {
+          <div class="inspector-content">
+            <h3>{{ selectedPosten.label }}</h3>
+
+            <div class="inspector-section">
+              <div class="inspector-section-title">Fahrzeug</div>
+              @if (selectedPosten.fahrzeug) {
+                <p class="inspector-fahrzeug-funkruf">{{ selectedPosten.fahrzeug.funkruf }}</p>
+                @if (selectedPosten.fahrzeug.seriennummer) {
+                  <p class="inspector-fahrzeug-meta">{{ selectedPosten.fahrzeug.seriennummer }}</p>
+                }
+              }
+              <mat-form-field class="inspector-fahrzeug-field">
+                <mat-label>Fahrzeug zuweisen</mat-label>
+                <input matInput
+                       [value]="fahrzeugInputValue(selectedPosten)"
+                       (input)="updateFahrzeugFilter(selectedPosten.id, $any($event).target.value)"
+                       [matAutocomplete]="inspectorAuto"
+                       placeholder="Suchen…" />
+                <mat-autocomplete #inspectorAuto [displayWith]="fahrzeugDisplayFn"
+                                  (optionSelected)="onFahrzeugSelected(selectedPosten.id, $event.option.value)">
+                  @for (f of filteredFahrzeuge(selectedPosten.id); track f.seriennummer) {
+                    <mat-option [value]="f">{{ f.funkruf }} ({{ f.seriennummer }})</mat-option>
+                  }
+                  @if (selectedPosten.fahrzeug) {
+                    <mat-option [value]="null">— Kein Fahrzeug —</mat-option>
+                  }
+                </mat-autocomplete>
+              </mat-form-field>
+            </div>
+          </div>
+        } @else if (selectedPosition) {
+          <div class="inspector-content">
+            <h3>{{ selectedPosition.position.label }}</h3>
+            <p class="inspector-label">Posten: {{ selectedPosition.posten.label }}</p>
+
+            <div class="inspector-section">
+              <div class="inspector-section-title">Anforderungen</div>
+              <div class="req-row">
+                <span class="req-label">Taktisch:</span>
+                @if (selectedPosition.position.requirements.taktisch) {
+                  <span
+                    class="tag-chip"
+                    [style.background]="taktischColor(selectedPosition.position.requirements.taktisch).bg"
+                    [style.color]="taktischColor(selectedPosition.position.requirements.taktisch).fg"
+                    [matTooltip]="TAKTISCH_LABEL[selectedPosition.position.requirements.taktisch]"
+                  >{{ selectedPosition.position.requirements.taktisch }}</span>
+                } @else {
+                  <span class="none-label">Keine</span>
+                }
+              </div>
+              <div class="req-row">
+                <span class="req-label">Medizinisch:</span>
+                @if (selectedPosition.position.requirements.medizinisch) {
+                  <span
+                    class="tag-chip"
+                    [style.background]="medizinischColor(selectedPosition.position.requirements.medizinisch).bg"
+                    [style.color]="medizinischColor(selectedPosition.position.requirements.medizinisch).fg"
+                    [matTooltip]="MEDIZINISCH_LABEL[selectedPosition.position.requirements.medizinisch]"
+                  >{{ selectedPosition.position.requirements.medizinisch }}</span>
+                } @else {
+                  <span class="none-label">Keine</span>
+                }
+              </div>
+            </div>
+
+            <div class="inspector-section">
+              <div class="inspector-section-title">Zuteilung</div>
+              @if (selectedPosition.position.assigned) {
+                <div class="assigned-person">
+                  <mat-icon>person</mat-icon>
+                  <span>{{ selectedPosition.position.assigned.name }}</span>
+                </div>
+              } @else {
+                <p class="unassigned-label">Nicht besetzt</p>
+              }
+            </div>
+          </div>
+        } @else {
+          <p class="inspector-hint">Position oder Posten auswählen für Details.</p>
+        }
+      </aside>
+    </div>
+  </div>
+} @else {
+  <div class="no-planung">
+    <p>Keine Planung geöffnet.</p>
+    <button mat-raised-button color="primary" (click)="goBack()">Zur Übersicht</button>
+  </div>
+}
