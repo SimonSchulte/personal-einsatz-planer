@@ -1,6 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -30,6 +32,7 @@ import {
   Medizinisch,
 } from '../../models/planung.model';
 import { FAHRZEUGE } from '../../data/fahrzeuge';
+import { ImportDialog } from '../../components/import-dialog/import-dialog';
 
 interface DragData {
   einsatzkraftId: string;
@@ -55,6 +58,7 @@ interface Staerke {
   selector: 'app-planning-editor',
   imports: [
     MatButtonModule,
+    MatDialogModule,
     MatIconModule,
     MatToolbarModule,
     MatSidenavModule,
@@ -77,6 +81,7 @@ export class PlanningEditor {
   private readonly store = inject(PlanungStoreService);
   private readonly router = inject(Router);
   private readonly saveLoad = inject(SaveLoadService);
+  private readonly dialog = inject(MatDialog);
 
   readonly planung = this.store.active;
 
@@ -200,6 +205,10 @@ export class PlanningEditor {
     const p = this.planung();
     if (!p) return;
     this.saveLoad.save(p);
+  }
+
+  openImportDialog(): void {
+    this.dialog.open(ImportDialog, { width: '560px' });
   }
 
   goBack(): void {

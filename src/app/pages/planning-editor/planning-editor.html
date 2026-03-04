@@ -35,6 +35,9 @@
         <div class="pane-header">
           <mat-icon>people</mat-icon>
           <span>Einsatzkräfte ({{ p.einsatzkraefte.length }})</span>
+          <button mat-icon-button matTooltip="Einsatzkräfte importieren" (click)="openImportDialog()">
+            <mat-icon>upload_file</mat-icon>
+          </button>
         </div>
         <div class="roster-list"
              cdkDropList

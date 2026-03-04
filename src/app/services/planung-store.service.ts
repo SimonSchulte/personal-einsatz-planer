@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { FahrzeugRef, Planung, Posten } from '../models/planung.model';
+import { Einsatzkraft, FahrzeugRef, Planung, Posten } from '../models/planung.model';
 import { EXAMPLE_PLANUNG } from '../data/example-planung';
 
 @Injectable({ providedIn: 'root' })
@@ -110,6 +110,47 @@ export class PlanungStoreService {
       this._planungen.update((list) => [...list, planung]);
     }
     this._active.set(planung);
+  }
+
+  importRoster(
+    incoming: Einsatzkraft[],
+    mode: 'replace' | 'merge',
+  ): { removedNames: string[]; affectedAssignments: string[] } {
+    const active = this._active();
+    if (!active) return { removedNames: [], affectedAssignments: [] };
+
+    const current = active.einsatzkraefte;
+
+    // Merge: reuse existing entries for known names, add new ones
+    const merged = incoming.map((inc) => current.find((e) => e.name === inc.name) ?? inc);
+
+    if (mode === 'merge') {
+      const existingNames = new Set(current.map((e) => e.name));
+      const toAdd = merged.filter((e) => !existingNames.has(e.name));
+      this.updateActive({ ...active, einsatzkraefte: [...current, ...toAdd] });
+      return { removedNames: [], affectedAssignments: [] };
+    }
+
+    // replace mode
+    const incomingNames = new Set(incoming.map((e) => e.name));
+    const removed = current.filter((e) => !incomingNames.has(e.name));
+    const removedIds = new Set(removed.map((e) => e.id));
+
+    const affectedAssignments = removed
+      .filter((e) =>
+        active.posten.some((p) => p.positions.some((pos) => pos.assigned?.id === e.id)),
+      )
+      .map((e) => e.name);
+
+    const newPosten = active.posten.map((p) => ({
+      ...p,
+      positions: p.positions.map((pos) =>
+        pos.assigned && removedIds.has(pos.assigned.id) ? { ...pos, assigned: null } : pos,
+      ),
+    }));
+
+    this.updateActive({ ...active, einsatzkraefte: merged, posten: newPosten });
+    return { removedNames: removed.map((e) => e.name), affectedAssignments };
   }
 
   unassignFromPosition(postenId: string, positionId: string): void {
