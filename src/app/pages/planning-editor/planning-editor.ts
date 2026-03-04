@@ -16,6 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { DatePipe } from '@angular/common';
 import { DragDropModule, CdkDragDrop, CdkDragStart } from '@angular/cdk/drag-drop';
 import { PlanungStoreService } from '../../services/planung-store.service';
+import { SaveLoadService } from '../../services/save-load.service';
 import {
   Einsatzkraft,
   Fahrzeug,
@@ -75,6 +76,7 @@ interface Staerke {
 export class PlanningEditor {
   private readonly store = inject(PlanungStoreService);
   private readonly router = inject(Router);
+  private readonly saveLoad = inject(SaveLoadService);
 
   readonly planung = this.store.active;
 
@@ -192,6 +194,12 @@ export class PlanningEditor {
     if (drag.fromPostenId && drag.fromPositionId) {
       this.store.unassignFromPosition(drag.fromPostenId, drag.fromPositionId);
     }
+  }
+
+  save(): void {
+    const p = this.planung();
+    if (!p) return;
+    this.saveLoad.save(p);
   }
 
   goBack(): void {

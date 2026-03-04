@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { DatePipe } from '@angular/common';
 import { PlanungStoreService } from '../../services/planung-store.service';
+import { SaveLoadService } from '../../services/save-load.service';
 
 @Component({
   selector: 'app-planning-list',
@@ -16,11 +17,22 @@ import { PlanungStoreService } from '../../services/planung-store.service';
 export class PlanningList {
   private readonly store = inject(PlanungStoreService);
   private readonly router = inject(Router);
+  private readonly saveLoad = inject(SaveLoadService);
 
   readonly planungen = this.store.planungen;
 
   openPlanung(id: string): void {
     this.store.openPlanung(id);
+    this.router.navigate(['/editor']);
+  }
+
+  async loadFromFile(): Promise<void> {
+    const result = await this.saveLoad.load();
+    if (!result) return;
+    if (result.versionWarning) {
+      window.alert('Versionswarnung: Die Datei wurde mit einer anderen Version gespeichert. Die Daten wurden trotzdem geladen, können aber unvollständig sein.');
+    }
+    this.store.importPlanung(result.planung);
     this.router.navigate(['/editor']);
   }
 

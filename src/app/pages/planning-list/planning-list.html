@@ -2,6 +2,10 @@
   <mat-icon>assignment</mat-icon>
   <span style="margin-left: 8px">Personaleinsatzplanung</span>
   <span class="spacer"></span>
+  <button mat-stroked-button (click)="loadFromFile()" style="margin-right: 8px">
+    <mat-icon>folder_open</mat-icon>
+    Datei öffnen
+  </button>
   <button mat-raised-button (click)="createNew()">
     <mat-icon>add</mat-icon>
     Neue Planung

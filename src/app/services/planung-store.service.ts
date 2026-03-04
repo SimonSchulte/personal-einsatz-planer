@@ -102,6 +102,16 @@ export class PlanungStoreService {
     });
   }
 
+  importPlanung(planung: Planung): void {
+    const exists = this._planungen().some((p) => p.id === planung.id);
+    if (exists) {
+      this._planungen.update((list) => list.map((p) => (p.id === planung.id ? planung : p)));
+    } else {
+      this._planungen.update((list) => [...list, planung]);
+    }
+    this._active.set(planung);
+  }
+
   unassignFromPosition(postenId: string, positionId: string): void {
     const active = this._active();
     if (!active) return;
