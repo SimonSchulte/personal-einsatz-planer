@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Einsatzkraft, FahrzeugRef, Planung, Posten } from '../models/planung.model';
+import { Abschnitt, Einsatzkraft, FahrzeugRef, Planung, Posten } from '../models/planung.model';
 import { EXAMPLE_PLANUNG } from '../data/example-planung';
 
 @Injectable({ providedIn: 'root' })
@@ -28,7 +28,7 @@ export class PlanungStoreService {
       name,
       start: new Date().toISOString(),
       end: new Date().toISOString(),
-      posten: [],
+      abschnitte: [],
       einsatzkraefte: [],
       einsatzleiter: null,
     };
@@ -42,7 +42,67 @@ export class PlanungStoreService {
     this._planungen.update((list) => list.map((p) => (p.id === planung.id ? planung : p)));
   }
 
-  addPosten(): void {
+  addAbschnitt(): void {
+    const active = this._active();
+    if (!active) return;
+    const newAbschnitt: Abschnitt = {
+      id: crypto.randomUUID(),
+      label: 'Neuer Abschnitt',
+      posten: [],
+    };
+    this.updateActive({ ...active, abschnitte: [...active.abschnitte, newAbschnitt] });
+  }
+
+  deleteAbschnitt(abschnittId: string): void {
+    const active = this._active();
+    if (!active) return;
+    this.updateActive({ ...active, abschnitte: active.abschnitte.filter((a) => a.id !== abschnittId) });
+  }
+
+  reorderPosten(abschnittId: string, fromIndex: number, toIndex: number): void {
+    const active = this._active();
+    if (!active || fromIndex === toIndex) return;
+    this.updateActive({
+      ...active,
+      abschnitte: active.abschnitte.map((a) => {
+        if (a.id !== abschnittId) return a;
+        const posten = [...a.posten];
+        const [moved] = posten.splice(fromIndex, 1);
+        posten.splice(toIndex, 0, moved);
+        return { ...a, posten };
+      }),
+    });
+  }
+
+  movePosten(postenId: string, fromAbschnittId: string, toAbschnittId: string, newIndex: number): void {
+    const active = this._active();
+    if (!active) return;
+    const posten = active.abschnitte.flatMap((a) => a.posten).find((p) => p.id === postenId);
+    if (!posten) return;
+    this.updateActive({
+      ...active,
+      abschnitte: active.abschnitte.map((a) => {
+        if (a.id === fromAbschnittId) return { ...a, posten: a.posten.filter((p) => p.id !== postenId) };
+        if (a.id === toAbschnittId) {
+          const next = [...a.posten];
+          next.splice(newIndex, 0, posten);
+          return { ...a, posten: next };
+        }
+        return a;
+      }),
+    });
+  }
+
+  renameAbschnitt(abschnittId: string, label: string): void {
+    const active = this._active();
+    if (!active) return;
+    this.updateActive({
+      ...active,
+      abschnitte: active.abschnitte.map((a) => (a.id === abschnittId ? { ...a, label } : a)),
+    });
+  }
+
+  addPosten(abschnittId: string): void {
     const active = this._active();
     if (!active) return;
     const newPosten: Posten = {
@@ -51,7 +111,12 @@ export class PlanungStoreService {
       fahrzeug: null,
       positions: [],
     };
-    this.updateActive({ ...active, posten: [...active.posten, newPosten] });
+    this.updateActive({
+      ...active,
+      abschnitte: active.abschnitte.map((a) =>
+        a.id === abschnittId ? { ...a, posten: [...a.posten, newPosten] } : a,
+      ),
+    });
   }
 
   setPostenFahrzeug(postenId: string, fahrzeug: FahrzeugRef | null): void {
@@ -59,14 +124,23 @@ export class PlanungStoreService {
     if (!active) return;
     this.updateActive({
       ...active,
-      posten: active.posten.map((p) => (p.id === postenId ? { ...p, fahrzeug } : p)),
+      abschnitte: active.abschnitte.map((a) => ({
+        ...a,
+        posten: a.posten.map((p) => (p.id === postenId ? { ...p, fahrzeug } : p)),
+      })),
     });
   }
 
   deletePosten(postenId: string): void {
     const active = this._active();
     if (!active) return;
-    this.updateActive({ ...active, posten: active.posten.filter((p) => p.id !== postenId) });
+    this.updateActive({
+      ...active,
+      abschnitte: active.abschnitte.map((a) => ({
+        ...a,
+        posten: a.posten.filter((p) => p.id !== postenId),
+      })),
+    });
   }
 
   clearPosten(postenId: string): void {
@@ -74,11 +148,14 @@ export class PlanungStoreService {
     if (!active) return;
     this.updateActive({
       ...active,
-      posten: active.posten.map((p) =>
-        p.id === postenId
-          ? { ...p, positions: p.positions.map((pos) => ({ ...pos, assigned: null })) }
-          : p,
-      ),
+      abschnitte: active.abschnitte.map((a) => ({
+        ...a,
+        posten: a.posten.map((p) =>
+          p.id === postenId
+            ? { ...p, positions: p.positions.map((pos) => ({ ...pos, assigned: null })) }
+            : p,
+        ),
+      })),
     });
   }
 
@@ -89,16 +166,40 @@ export class PlanungStoreService {
     if (!ek) return;
     this.updateActive({
       ...active,
-      posten: active.posten.map((p) =>
-        p.id === postenId
-          ? {
-              ...p,
-              positions: p.positions.map((pos) =>
-                pos.id === positionId ? { ...pos, assigned: { id: ek.id, name: ek.name } } : pos,
-              ),
-            }
-          : p,
-      ),
+      abschnitte: active.abschnitte.map((a) => ({
+        ...a,
+        posten: a.posten.map((p) =>
+          p.id === postenId
+            ? {
+                ...p,
+                positions: p.positions.map((pos) =>
+                  pos.id === positionId ? { ...pos, assigned: { id: ek.id, name: ek.name } } : pos,
+                ),
+              }
+            : p,
+        ),
+      })),
+    });
+  }
+
+  unassignFromPosition(postenId: string, positionId: string): void {
+    const active = this._active();
+    if (!active) return;
+    this.updateActive({
+      ...active,
+      abschnitte: active.abschnitte.map((a) => ({
+        ...a,
+        posten: a.posten.map((p) =>
+          p.id === postenId
+            ? {
+                ...p,
+                positions: p.positions.map((pos) =>
+                  pos.id === positionId ? { ...pos, assigned: null } : pos,
+                ),
+              }
+            : p,
+        ),
+      })),
     });
   }
 
@@ -120,6 +221,7 @@ export class PlanungStoreService {
     if (!active) return { removedNames: [], affectedAssignments: [] };
 
     const current = active.einsatzkraefte;
+    const allPosten = active.abschnitte.flatMap((a) => a.posten);
 
     // Merge: reuse existing entries for known names, add new ones
     const merged = incoming.map((inc) => current.find((e) => e.name === inc.name) ?? inc);
@@ -137,37 +239,20 @@ export class PlanungStoreService {
     const removedIds = new Set(removed.map((e) => e.id));
 
     const affectedAssignments = removed
-      .filter((e) =>
-        active.posten.some((p) => p.positions.some((pos) => pos.assigned?.id === e.id)),
-      )
+      .filter((e) => allPosten.some((p) => p.positions.some((pos) => pos.assigned?.id === e.id)))
       .map((e) => e.name);
 
-    const newPosten = active.posten.map((p) => ({
-      ...p,
-      positions: p.positions.map((pos) =>
-        pos.assigned && removedIds.has(pos.assigned.id) ? { ...pos, assigned: null } : pos,
-      ),
+    const newAbschnitte = active.abschnitte.map((a) => ({
+      ...a,
+      posten: a.posten.map((p) => ({
+        ...p,
+        positions: p.positions.map((pos) =>
+          pos.assigned && removedIds.has(pos.assigned.id) ? { ...pos, assigned: null } : pos,
+        ),
+      })),
     }));
 
-    this.updateActive({ ...active, einsatzkraefte: merged, posten: newPosten });
+    this.updateActive({ ...active, einsatzkraefte: merged, abschnitte: newAbschnitte });
     return { removedNames: removed.map((e) => e.name), affectedAssignments };
-  }
-
-  unassignFromPosition(postenId: string, positionId: string): void {
-    const active = this._active();
-    if (!active) return;
-    this.updateActive({
-      ...active,
-      posten: active.posten.map((p) =>
-        p.id === postenId
-          ? {
-              ...p,
-              positions: p.positions.map((pos) =>
-                pos.id === positionId ? { ...pos, assigned: null } : pos,
-              ),
-            }
-          : p,
-      ),
-    });
   }
 }

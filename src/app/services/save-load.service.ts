@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Planung, PepFile } from '../models/planung.model';
 
-const CURRENT_VERSION = '1.0';
+const CURRENT_VERSION = '1.1';
 
 @Injectable({ providedIn: 'root' })
 export class SaveLoadService {

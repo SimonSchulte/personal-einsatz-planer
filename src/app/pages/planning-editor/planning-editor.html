@@ -10,15 +10,6 @@
         {{ p.start | date: 'dd.MM.yyyy HH:mm' : '' : 'de-DE' }} –
         {{ p.end | date: 'dd.MM.yyyy HH:mm' : '' : 'de-DE' }}
       </span>
-      <div class="einsatzleiter-field">
-        <span class="einsatzleiter-label">EinsatzleiterIn</span>
-        <mat-select class="einsatzleiter-select" [value]="p.einsatzleiter?.id ?? null" (selectionChange)="setEinsatzleiter($event.value)">
-          <mat-option [value]="null">– Keine –</mat-option>
-          @for (ek of p.einsatzkraefte; track ek.id) {
-            <mat-option [value]="ek.id">{{ ek.name }}</mat-option>
-          }
-        </mat-select>
-      </div>
       <span class="spacer"></span>
       <button mat-icon-button matTooltip="Speichern" (click)="save()">
         <mat-icon>save</mat-icon>
@@ -30,6 +21,7 @@
 
     <!-- Three-pane layout -->
     <div class="editor-body" cdkDropListGroup>
+
       <!-- LEFT: Roster -->
       <aside class="pane pane-roster">
         <div class="pane-header">
@@ -42,6 +34,7 @@
         <div class="roster-list"
              cdkDropList
              cdkDropListSortingDisabled
+             [cdkDropListEnterPredicate]="isEkDrag"
              (cdkDropListDropped)="onDropToRoster($event)">
           @for (person of unassignedRoster(p); track person.id) {
             <div class="einsatzkraft-card available"
@@ -52,21 +45,12 @@
               <span class="ek-name">{{ person.name }}</span>
               <div class="ek-chips">
                 @for (tag of person.tags.taktisch ?? []; track tag) {
-                  <span
-                    class="tag-chip"
-                    [style.background]="taktischColor(tag).bg"
-                    [style.color]="taktischColor(tag).fg"
-                    [style.border]="tag === 'VF' ? '1px solid #000548' : 'none'"
-                    [matTooltip]="TAKTISCH_LABEL[tag]"
-                  >{{ tag }}</span>
+                  <span class="tag-chip" [style.background]="taktischColor(tag).bg" [style.color]="taktischColor(tag).fg"
+                    [style.border]="tag === 'VF' ? '1px solid #000548' : 'none'" [matTooltip]="TAKTISCH_LABEL[tag]">{{ tag }}</span>
                 }
                 @for (tag of person.tags.medizinisch ?? []; track tag) {
-                  <span
-                    class="tag-chip"
-                    [style.background]="medizinischColor(tag).bg"
-                    [style.color]="medizinischColor(tag).fg"
-                    [matTooltip]="MEDIZINISCH_LABEL[tag]"
-                  >{{ tag }}</span>
+                  <span class="tag-chip" [style.background]="medizinischColor(tag).bg" [style.color]="medizinischColor(tag).fg"
+                    [matTooltip]="MEDIZINISCH_LABEL[tag]">{{ tag }}</span>
                 }
                 @for (tag of person.tags.zusatz ?? []; track tag) {
                   <span class="tag-chip tag-zusatz">{{ tag }}</span>
@@ -89,19 +73,11 @@
                 <span class="ek-name">{{ person.name }}</span>
                 <div class="ek-chips">
                   @for (tag of person.tags.taktisch ?? []; track tag) {
-                    <span
-                      class="tag-chip"
-                      [style.background]="taktischColor(tag).bg"
-                      [style.color]="taktischColor(tag).fg"
-                      [style.border]="tag === 'VF' ? '1px solid #000548' : 'none'"
-                    >{{ tag }}</span>
+                    <span class="tag-chip" [style.background]="taktischColor(tag).bg" [style.color]="taktischColor(tag).fg"
+                      [style.border]="tag === 'VF' ? '1px solid #000548' : 'none'">{{ tag }}</span>
                   }
                   @for (tag of person.tags.medizinisch ?? []; track tag) {
-                    <span
-                      class="tag-chip"
-                      [style.background]="medizinischColor(tag).bg"
-                      [style.color]="medizinischColor(tag).fg"
-                    >{{ tag }}</span>
+                    <span class="tag-chip" [style.background]="medizinischColor(tag).bg" [style.color]="medizinischColor(tag).fg">{{ tag }}</span>
                   }
                 </div>
               </div>
@@ -110,7 +86,7 @@
         </div>
       </aside>
 
-      <!-- CENTER: Posten/Position Tree -->
+      <!-- CENTER: Tree -->
       <main class="pane pane-tree">
         <div class="pane-header">
           <mat-icon>account_tree</mat-icon>
@@ -139,131 +115,205 @@
             </div>
           </div>
         </div>
-        <div class="tree-scroll">
-        <mat-accordion multi class="posten-accordion">
-          @for (posten of p.posten; track posten.id) {
-            <mat-expansion-panel #panel expanded hideToggle>
-              <mat-expansion-panel-header>
-                <mat-panel-title (click)="selectPosten(posten); $event.stopPropagation()">
-                  {{ posten.label }}
-                  @if (posten.fahrzeug) {
-                    <span class="posten-fahrzeug-text">{{ posten.fahrzeug.funkruf }}</span>
-                  }
-                </mat-panel-title>
-                <mat-panel-description (click)="$event.stopPropagation()">
-                  <div class="staerke-block compact description-spacer">
-                    <div class="staerke-row ist">
-                      <span class="staerke-label">Ist</span>
-                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).fuhrer, postenSoll(posten).fuhrer)">{{ postenIst(posten).fuhrer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).unterfuehrer, postenSoll(posten).unterfuehrer)">{{ postenIst(posten).unterfuehrer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).helfer, postenSoll(posten).helfer)">{{ postenIst(posten).helfer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).gesamt, postenSoll(posten).gesamt)"><u>{{ postenIst(posten).gesamt }}</u></span>
-                    </div>
-                    <div class="staerke-row soll">
-                      <span class="staerke-label">Soll</span>
-                      <span class="staerke-num">{{ postenSoll(posten).fuhrer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num">{{ postenSoll(posten).unterfuehrer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num">{{ postenSoll(posten).helfer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num"><u>{{ postenSoll(posten).gesamt }}</u></span>
-                    </div>
-                  </div>
-                  <button mat-icon-button class="posten-action-btn" matTooltip="Leeren"
-                    (click)="clearPosten(posten)">
-                    <mat-icon>cleaning_services</mat-icon>
-                  </button>
-                  <button mat-icon-button class="posten-action-btn posten-action-btn--danger" matTooltip="Posten löschen"
-                    (click)="deletePosten(posten)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                  <button mat-icon-button class="posten-action-btn"
-                    [matTooltip]="panel.expanded ? 'Einklappen' : 'Ausklappen'"
-                    (click)="panel.toggle()">
-                    <mat-icon>{{ panel.expanded ? 'expand_less' : 'expand_more' }}</mat-icon>
-                  </button>
-                </mat-panel-description>
-              </mat-expansion-panel-header>
 
-              <div class="position-list">
-                @for (position of posten.positions; track position.id) {
-                  <div
-                    class="position-row"
-                    [class.selected]="selectedPosition?.position?.id === position.id"
-                    (click)="selectPosition(posten, position)"
-                  >
-                    <div class="position-label">{{ position.label }}</div>
-                    <div class="position-reqs">
-                      @if (position.requirements.taktisch) {
-                        <span
-                          class="tag-chip req-chip"
-                          [style.background]="taktischColor(position.requirements.taktisch).bg"
-                          [style.color]="taktischColor(position.requirements.taktisch).fg"
-                          [style.border]="position.requirements.taktisch === 'VF' ? '1px solid #000548' : 'none'"
-                          [matTooltip]="TAKTISCH_LABEL[position.requirements.taktisch]"
-                        >{{ position.requirements.taktisch }}</span>
-                      } @else {
-                        <span class="tag-chip req-chip req-any">–</span>
-                      }
-                      @if (position.requirements.medizinisch) {
-                        <span
-                          class="tag-chip req-chip"
-                          [style.background]="medizinischColor(position.requirements.medizinisch).bg"
-                          [style.color]="medizinischColor(position.requirements.medizinisch).fg"
-                          [matTooltip]="MEDIZINISCH_LABEL[position.requirements.medizinisch]"
-                        >{{ position.requirements.medizinisch }}</span>
-                      } @else {
-                        <span class="tag-chip req-chip req-any">–</span>
-                      }
-                    </div>
-                    <div class="position-assigned"
-                         cdkDropList
-                         cdkDropListSortingDisabled
-                         [cdkDropListData]="{ postenId: posten.id, positionId: position.id }"
-                         [class]="'match-' + positionMatchClass(position, draggingEinsatzkraft() ?? assignedPerson(position))"
-                         (cdkDropListDropped)="onDropToPosition($event)">
-                      @if (position.assigned) {
-                        <div cdkDrag
-                             [cdkDragData]="{ einsatzkraftId: position.assigned.id, fromPostenId: posten.id, fromPositionId: position.id }"
-                             (cdkDragStarted)="onDragStarted($event)"
-                             (cdkDragEnded)="onDragEnded()"
-                             class="assigned-drag-item">
-                          <mat-icon class="assign-icon">person</mat-icon>
-                          <div class="assigned-name-block">
-                            <span>{{ position.assigned.name }}</span>
-                            @if (assignedPerson(position); as person) {
-                              <div class="assigned-chips">
-                                @for (tag of person.tags.taktisch ?? []; track tag) {
-                                  <span class="tag-chip tag-chip--sm" [style.background]="taktischColor(tag).bg" [style.color]="taktischColor(tag).fg" [matTooltip]="TAKTISCH_LABEL[tag]">{{ tag }}</span>
+        <div class="tree-scroll">
+
+          <!-- Fixed EinsatzleiterIn row (level 0) -->
+          <div class="tree-row tree-row--el">
+            <span class="tree-toggle-spacer"></span>
+            <span class="tree-label tree-label--el">EinsatzleiterIn</span>
+            <mat-select class="el-select" [value]="p.einsatzleiter?.id ?? null" (selectionChange)="setEinsatzleiter($event.value)">
+              <mat-option [value]="null">– Keine –</mat-option>
+              @for (ek of p.einsatzkraefte; track ek.id) {
+                <mat-option [value]="ek.id">{{ ek.name }}</mat-option>
+              }
+            </mat-select>
+          </div>
+
+          <!-- Abschnitte -->
+          @for (abschnitt of p.abschnitte; track abschnitt.id) {
+
+            <!-- Abschnitt row (level 0) -->
+            <div class="tree-row tree-row--abschnitt">
+              <button class="tree-toggle" (click)="toggleAbschnitt(abschnitt.id)" [attr.aria-label]="isCollapsedAbschnitt(abschnitt.id) ? 'Ausklappen' : 'Einklappen'">
+                <mat-icon>{{ isCollapsedAbschnitt(abschnitt.id) ? 'chevron_right' : 'expand_more' }}</mat-icon>
+              </button>
+              <input class="abschnitt-label-input"
+                     [value]="abschnitt.label"
+                     (change)="renameAbschnitt(abschnitt.id, $any($event.target).value)"
+                     (click)="$event.stopPropagation()" />
+              <span class="tree-spacer"></span>
+              <div class="staerke-block compact abschnitt-staerke">
+                <div class="staerke-row ist">
+                  <span class="staerke-label">Ist</span>
+                  <span class="staerke-num" [class]="staerkeStatus(abschnittIst(abschnitt).fuhrer, abschnittSoll(abschnitt).fuhrer)">{{ abschnittIst(abschnitt).fuhrer }}</span>
+                  <span class="staerke-sep">/</span>
+                  <span class="staerke-num" [class]="staerkeStatus(abschnittIst(abschnitt).unterfuehrer, abschnittSoll(abschnitt).unterfuehrer)">{{ abschnittIst(abschnitt).unterfuehrer }}</span>
+                  <span class="staerke-sep">/</span>
+                  <span class="staerke-num" [class]="staerkeStatus(abschnittIst(abschnitt).helfer, abschnittSoll(abschnitt).helfer)">{{ abschnittIst(abschnitt).helfer }}</span>
+                  <span class="staerke-sep">/</span>
+                  <span class="staerke-num" [class]="staerkeStatus(abschnittIst(abschnitt).gesamt, abschnittSoll(abschnitt).gesamt)"><u>{{ abschnittIst(abschnitt).gesamt }}</u></span>
+                </div>
+                <div class="staerke-row soll">
+                  <span class="staerke-label">Soll</span>
+                  <span class="staerke-num">{{ abschnittSoll(abschnitt).fuhrer }}</span>
+                  <span class="staerke-sep">/</span>
+                  <span class="staerke-num">{{ abschnittSoll(abschnitt).unterfuehrer }}</span>
+                  <span class="staerke-sep">/</span>
+                  <span class="staerke-num">{{ abschnittSoll(abschnitt).helfer }}</span>
+                  <span class="staerke-sep">/</span>
+                  <span class="staerke-num"><u>{{ abschnittSoll(abschnitt).gesamt }}</u></span>
+                </div>
+              </div>
+              <button mat-icon-button class="posten-action-btn posten-action-btn--danger"
+                      matTooltip="Abschnitt löschen" (click)="deleteAbschnitt(abschnitt)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+
+            <!-- Abschnitt children (collapsible) -->
+            @if (!isCollapsedAbschnitt(abschnitt.id)) {
+              <div class="abschnitt-children">
+
+                <!-- Posten drop list -->
+                <div class="posten-drop-list"
+                     cdkDropList
+                     [id]="postenListId(abschnitt.id)"
+                     [cdkDropListConnectedTo]="connectedPostenListIds(abschnitt.id)"
+                     [cdkDropListData]="abschnitt.posten"
+                     [cdkDropListEnterPredicate]="isPostenDrag"
+                     (cdkDropListDropped)="onDropPosten($event, abschnitt.id)">
+
+                  @for (posten of abschnitt.posten; track posten.id) {
+
+                    <!-- Posten drag item -->
+                    <div class="posten-drag-item"
+                         cdkDrag
+                         [cdkDragData]="{ postenId: posten.id, fromAbschnittId: abschnitt.id }">
+
+                      <!-- Custom drag preview: just the label -->
+                      <div *cdkDragPreview class="posten-drag-preview">
+                        <mat-icon>drag_indicator</mat-icon>
+                        {{ posten.label }}
+                      </div>
+
+                      <!-- Posten row (level 1) -->
+                      <div class="tree-row tree-row--posten"
+                           [class.tree-row--selected]="selectedPosten?.id === posten.id">
+                        <mat-icon cdkDragHandle class="drag-handle" matTooltip="Verschieben">drag_indicator</mat-icon>
+                        <button class="tree-toggle" (click)="togglePosten(posten.id)">
+                          <mat-icon>{{ isCollapsedPosten(posten.id) ? 'chevron_right' : 'expand_more' }}</mat-icon>
+                        </button>
+                        <span class="tree-label" (click)="selectPosten(posten)">
+                          {{ posten.label }}
+                          @if (posten.fahrzeug) {
+                            <span class="posten-fahrzeug-text">{{ posten.fahrzeug.funkruf }}</span>
+                          }
+                        </span>
+                        <span class="tree-spacer"></span>
+                        <span class="posten-staerke">
+                          <span [class]="staerkeStatus(postenIst(posten).fuhrer, postenSoll(posten).fuhrer)">{{ postenIst(posten).fuhrer }}</span><span class="staerke-sep">/</span><span [class]="staerkeStatus(postenIst(posten).unterfuehrer, postenSoll(posten).unterfuehrer)">{{ postenIst(posten).unterfuehrer }}</span><span class="staerke-sep">/</span><span [class]="staerkeStatus(postenIst(posten).helfer, postenSoll(posten).helfer)">{{ postenIst(posten).helfer }}</span><span class="staerke-sep">/</span><u [class]="staerkeStatus(postenIst(posten).gesamt, postenSoll(posten).gesamt)">{{ postenIst(posten).gesamt }}</u>
+                        </span>
+                        <button mat-icon-button class="posten-action-btn" matTooltip="Leeren"
+                                (click)="clearPosten(posten)">
+                          <mat-icon>cleaning_services</mat-icon>
+                        </button>
+                        <button mat-icon-button class="posten-action-btn posten-action-btn--danger"
+                                matTooltip="Posten löschen" (click)="deletePosten(posten)">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+
+                      <!-- Positions (level 2, collapsible) -->
+                      @if (!isCollapsedPosten(posten.id)) {
+                        <div class="positions-container">
+                          @for (position of posten.positions; track position.id) {
+                            <div class="tree-row tree-row--position"
+                                 [class.tree-row--selected]="selectedPosition?.position?.id === position.id"
+                                 (click)="selectPosition(posten, position)">
+                              <div class="position-label">{{ position.label }}</div>
+                              <div class="position-reqs">
+                                @if (position.requirements.taktisch) {
+                                  <span class="tag-chip req-chip"
+                                        [style.background]="taktischColor(position.requirements.taktisch).bg"
+                                        [style.color]="taktischColor(position.requirements.taktisch).fg"
+                                        [style.border]="position.requirements.taktisch === 'VF' ? '1px solid #000548' : 'none'"
+                                        [matTooltip]="TAKTISCH_LABEL[position.requirements.taktisch]">{{ position.requirements.taktisch }}</span>
+                                } @else {
+                                  <span class="tag-chip req-chip req-any">–</span>
                                 }
-                                @for (tag of person.tags.medizinisch ?? []; track tag) {
-                                  <span class="tag-chip tag-chip--sm" [style.background]="medizinischColor(tag).bg" [style.color]="medizinischColor(tag).fg" [matTooltip]="MEDIZINISCH_LABEL[tag]">{{ tag }}</span>
+                                @if (position.requirements.medizinisch) {
+                                  <span class="tag-chip req-chip"
+                                        [style.background]="medizinischColor(position.requirements.medizinisch).bg"
+                                        [style.color]="medizinischColor(position.requirements.medizinisch).fg"
+                                        [matTooltip]="MEDIZINISCH_LABEL[position.requirements.medizinisch]">{{ position.requirements.medizinisch }}</span>
+                                } @else {
+                                  <span class="tag-chip req-chip req-any">–</span>
                                 }
                               </div>
-                            }
-                          </div>
+                              <div class="position-assigned"
+                                   cdkDropList
+                                   cdkDropListSortingDisabled
+                                   [cdkDropListData]="{ postenId: posten.id, positionId: position.id }"
+                                   [cdkDropListEnterPredicate]="isEkDrag"
+                                   [class]="'match-' + positionMatchClass(position, draggingEinsatzkraft() ?? assignedPerson(position))"
+                                   (cdkDropListDropped)="onDropToPosition($event)">
+                                @if (position.assigned) {
+                                  <div cdkDrag
+                                       [cdkDragData]="{ einsatzkraftId: position.assigned.id, fromPostenId: posten.id, fromPositionId: position.id }"
+                                       (cdkDragStarted)="onDragStarted($event)"
+                                       (cdkDragEnded)="onDragEnded()"
+                                       class="assigned-drag-item">
+                                    <mat-icon class="assign-icon">person</mat-icon>
+                                    <div class="assigned-name-block">
+                                      <span>{{ position.assigned.name }}</span>
+                                      @if (assignedPerson(position); as person) {
+                                        <div class="assigned-chips">
+                                          @for (tag of person.tags.taktisch ?? []; track tag) {
+                                            <span class="tag-chip tag-chip--sm" [style.background]="taktischColor(tag).bg" [style.color]="taktischColor(tag).fg" [matTooltip]="TAKTISCH_LABEL[tag]">{{ tag }}</span>
+                                          }
+                                          @for (tag of person.tags.medizinisch ?? []; track tag) {
+                                            <span class="tag-chip tag-chip--sm" [style.background]="medizinischColor(tag).bg" [style.color]="medizinischColor(tag).fg" [matTooltip]="MEDIZINISCH_LABEL[tag]">{{ tag }}</span>
+                                          }
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                } @else {
+                                  <mat-icon class="assign-icon unassigned">person_add</mat-icon>
+                                  <span class="unassigned-label">Nicht besetzt</span>
+                                }
+                              </div>
+                            </div>
+                          }
                         </div>
-                      } @else {
-                        <mat-icon class="assign-icon unassigned">person_add</mat-icon>
-                        <span class="unassigned-label">Nicht besetzt</span>
                       }
-                    </div>
-                  </div>
-                }
-              </div>
-            </mat-expansion-panel>
-          }
-        </mat-accordion>
-        <div class="add-posten-row">
-          <button mat-stroked-button (click)="addPosten()">
-            <mat-icon>add</mat-icon> Neuer Posten
-          </button>
-        </div>
-        </div>
+                    </div><!-- /posten-drag-item -->
+
+                  }
+                </div><!-- /posten-drop-list -->
+
+                <!-- Neuer Posten (outside drop list to avoid CDK index issues) -->
+                <div class="tree-row tree-row--add-posten">
+                  <span class="tree-indent-l1"></span>
+                  <button mat-button (click)="addPosten(abschnitt.id)">
+                    <mat-icon>add</mat-icon> Neuer Posten
+                  </button>
+                </div>
+
+              </div><!-- /abschnitt-children -->
+            }
+
+          }<!-- /@for abschnitte -->
+
+          <!-- Neuer Abschnitt -->
+          <div class="tree-row tree-row--add-abschnitt">
+            <button mat-stroked-button (click)="addAbschnitt()">
+              <mat-icon>add</mat-icon> Neuer Abschnitt
+            </button>
+          </div>
+
+        </div><!-- /tree-scroll -->
       </main>
 
       <!-- RIGHT: Inspector -->
@@ -281,7 +331,6 @@
         @if (selectedPosten) {
           <div class="inspector-content">
             <h3>{{ selectedPosten.label }}</h3>
-
             <div class="inspector-section">
               <div class="inspector-section-title">Fahrzeug</div>
               @if (selectedPosten.fahrzeug) {
@@ -313,18 +362,15 @@
           <div class="inspector-content">
             <h3>{{ selectedPosition.position.label }}</h3>
             <p class="inspector-label">Posten: {{ selectedPosition.posten.label }}</p>
-
             <div class="inspector-section">
               <div class="inspector-section-title">Anforderungen</div>
               <div class="req-row">
                 <span class="req-label">Taktisch:</span>
                 @if (selectedPosition.position.requirements.taktisch) {
-                  <span
-                    class="tag-chip"
-                    [style.background]="taktischColor(selectedPosition.position.requirements.taktisch).bg"
-                    [style.color]="taktischColor(selectedPosition.position.requirements.taktisch).fg"
-                    [matTooltip]="TAKTISCH_LABEL[selectedPosition.position.requirements.taktisch]"
-                  >{{ selectedPosition.position.requirements.taktisch }}</span>
+                  <span class="tag-chip"
+                        [style.background]="taktischColor(selectedPosition.position.requirements.taktisch).bg"
+                        [style.color]="taktischColor(selectedPosition.position.requirements.taktisch).fg"
+                        [matTooltip]="TAKTISCH_LABEL[selectedPosition.position.requirements.taktisch]">{{ selectedPosition.position.requirements.taktisch }}</span>
                 } @else {
                   <span class="none-label">Keine</span>
                 }
@@ -332,18 +378,15 @@
               <div class="req-row">
                 <span class="req-label">Medizinisch:</span>
                 @if (selectedPosition.position.requirements.medizinisch) {
-                  <span
-                    class="tag-chip"
-                    [style.background]="medizinischColor(selectedPosition.position.requirements.medizinisch).bg"
-                    [style.color]="medizinischColor(selectedPosition.position.requirements.medizinisch).fg"
-                    [matTooltip]="MEDIZINISCH_LABEL[selectedPosition.position.requirements.medizinisch]"
-                  >{{ selectedPosition.position.requirements.medizinisch }}</span>
+                  <span class="tag-chip"
+                        [style.background]="medizinischColor(selectedPosition.position.requirements.medizinisch).bg"
+                        [style.color]="medizinischColor(selectedPosition.position.requirements.medizinisch).fg"
+                        [matTooltip]="MEDIZINISCH_LABEL[selectedPosition.position.requirements.medizinisch]">{{ selectedPosition.position.requirements.medizinisch }}</span>
                 } @else {
                   <span class="none-label">Keine</span>
                 }
               </div>
             </div>
-
             <div class="inspector-section">
               <div class="inspector-section-title">Zuteilung</div>
               @if (selectedPosition.position.assigned) {
@@ -360,7 +403,8 @@
           <p class="inspector-hint">Position oder Posten auswählen für Details.</p>
         }
       </aside>
-    </div>
+
+    </div><!-- /editor-body -->
   </div>
 } @else {
   <div class="no-planung">

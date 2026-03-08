@@ -49,7 +49,7 @@ export class ImportDialog {
     const affected = this.removedNames().filter((name) =>
       this.store
         .active()
-        ?.posten.some((p) => p.positions.some((pos) => pos.assigned?.name === name)),
+        ?.abschnitte.flatMap((a) => a.posten).some((p) => p.positions.some((pos) => pos.assigned?.name === name)),
     );
 
     if (!this.mergeMode() && affected.length > 0) {

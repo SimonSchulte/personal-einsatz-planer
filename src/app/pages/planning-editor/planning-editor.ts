@@ -7,7 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -16,10 +15,11 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { DatePipe } from '@angular/common';
-import { DragDropModule, CdkDragDrop, CdkDragStart } from '@angular/cdk/drag-drop';
+import { DragDropModule, CdkDragDrop, CdkDragStart, CdkDrag } from '@angular/cdk/drag-drop';
 import { PlanungStoreService } from '../../services/planung-store.service';
 import { SaveLoadService } from '../../services/save-load.service';
 import {
+  Abschnitt,
   Einsatzkraft,
   Fahrzeug,
   FahrzeugRef,
@@ -63,7 +63,6 @@ interface Staerke {
     MatToolbarModule,
     MatSidenavModule,
     MatChipsModule,
-    MatExpansionModule,
     MatListModule,
     MatDividerModule,
     MatTooltipModule,
@@ -92,6 +91,40 @@ export class PlanningEditor {
   readonly inspectorCollapsed = signal(true);
   toggleInspector(): void { this.inspectorCollapsed.update(v => !v); }
   toggleAssignedList(): void { this.assignedListCollapsed.update(v => !v); }
+
+  // Tree expansion state: track which nodes are COLLAPSED (default: all expanded)
+  readonly collapsedAbschnitte = signal<Set<string>>(new Set<string>());
+  readonly collapsedPosten = signal<Set<string>>(new Set<string>());
+
+  isCollapsedAbschnitt(id: string): boolean { return this.collapsedAbschnitte().has(id); }
+  toggleAbschnitt(id: string): void {
+    this.collapsedAbschnitte.update((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }
+  isCollapsedPosten(id: string): boolean { return this.collapsedPosten().has(id); }
+  togglePosten(id: string): void {
+    this.collapsedPosten.update((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }
+
+  // Posten drag & drop between Abschnitte
+  readonly isEkDrag = (drag: CdkDrag) => 'einsatzkraftId' in (drag.data ?? {});
+  readonly isPostenDrag = (drag: CdkDrag) => 'postenId' in (drag.data ?? {});
+
+  postenListId(abschnittId: string): string { return `posten-list-${abschnittId}`; }
+
+  connectedPostenListIds(abschnittId: string): string[] {
+    return (this.planung()?.abschnitte ?? [])
+      .filter((a) => a.id !== abschnittId)
+      .map((a) => this.postenListId(a.id));
+  }
+
+  onDropPosten(event: CdkDragDrop<Posten[]>, toAbschnittId: string): void {
+    const dragData = event.item.data as { postenId: string; fromAbschnittId: string };
+    if (event.previousContainer === event.container) {
+      this.store.reorderPosten(toAbschnittId, event.previousIndex, event.currentIndex);
+    } else {
+      this.store.movePosten(dragData.postenId, dragData.fromAbschnittId, toAbschnittId, event.currentIndex);
+    }
+  }
 
   readonly TAKTISCH_LABEL: Record<Taktisch, string> = {
     H: 'Helfer',
@@ -149,7 +182,8 @@ export class PlanningEditor {
     this.fahrzeugFilter.update((m) => ({ ...m, [postenId]: '' }));
     // Keep selectedPosten in sync with updated store state
     if (this.selectedPosten?.id === postenId) {
-      this.selectedPosten = this.planung()?.posten.find((p) => p.id === postenId) ?? null;
+      const allPosten = this.planung()?.abschnitte.flatMap((a) => a.posten) ?? [];
+      this.selectedPosten = allPosten.find((p) => p.id === postenId) ?? null;
     }
   }
 
@@ -177,7 +211,8 @@ export class PlanningEditor {
     if (!p) return;
 
     // Read current occupant of the target position before assigning
-    const targetPosten = p.posten.find((po) => po.id === drop.postenId);
+    const allPosten = p.abschnitte.flatMap((a) => a.posten);
+    const targetPosten = allPosten.find((po) => po.id === drop.postenId);
     const targetPosition = targetPosten?.positions.find((pos) => pos.id === drop.positionId);
     const displaced = targetPosition?.assigned ?? null;
 
@@ -224,8 +259,23 @@ export class PlanningEditor {
     this.store.updateActive({ ...p, einsatzleiter });
   }
 
-  addPosten(): void {
-    this.store.addPosten();
+  addAbschnitt(): void {
+    this.store.addAbschnitt();
+  }
+
+  deleteAbschnitt(abschnitt: Abschnitt): void {
+    const msg = `Abschnitt "${abschnitt.label}" löschen? Alle enthaltenen Posten werden ebenfalls gelöscht.`;
+    if (window.confirm(msg)) {
+      this.store.deleteAbschnitt(abschnitt.id);
+    }
+  }
+
+  renameAbschnitt(abschnittId: string, label: string): void {
+    this.store.renameAbschnitt(abschnittId, label);
+  }
+
+  addPosten(abschnittId: string): void {
+    this.store.addPosten(abschnittId);
   }
 
   deletePosten(posten: Posten): void {
@@ -346,15 +396,30 @@ export class PlanningEditor {
     return s;
   }
 
+  abschnittSoll(abschnitt: Abschnitt): Staerke {
+    const s = { fuhrer: 0, unterfuehrer: 0, helfer: 0, gesamt: 0 };
+    for (const p of abschnitt.posten) { const ps = this.postenSoll(p); s.fuhrer += ps.fuhrer; s.unterfuehrer += ps.unterfuehrer; s.helfer += ps.helfer; s.gesamt += ps.gesamt; }
+    return s;
+  }
+
+  abschnittIst(abschnitt: Abschnitt): Staerke {
+    const s = { fuhrer: 0, unterfuehrer: 0, helfer: 0, gesamt: 0 };
+    for (const p of abschnitt.posten) { const pi = this.postenIst(p); s.fuhrer += pi.fuhrer; s.unterfuehrer += pi.unterfuehrer; s.helfer += pi.helfer; s.gesamt += pi.gesamt; }
+    return s;
+  }
+
   planungSoll(planung: Planung): Staerke {
-    const all = planung.posten.flatMap((p) => p.positions);
+    const all = planung.abschnitte.flatMap((a) => a.posten).flatMap((p) => p.positions);
     const s = { fuhrer: 0, unterfuehrer: 0, helfer: 0, gesamt: all.length };
     for (const pos of all) s[this.sollRole(pos.requirements.taktisch)]++;
     return s;
   }
 
   planungIst(planung: Planung): Staerke {
-    const assigned = planung.posten.flatMap((p) => p.positions).filter((p) => p.assigned);
+    const assigned = planung.abschnitte
+      .flatMap((a) => a.posten)
+      .flatMap((p) => p.positions)
+      .filter((p) => p.assigned);
     const s = { fuhrer: 0, unterfuehrer: 0, helfer: 0, gesamt: assigned.length };
     for (const pos of assigned) {
       const person = planung.einsatzkraefte.find((e) => e.id === pos.assigned!.id);
@@ -371,7 +436,10 @@ export class PlanningEditor {
 
   unassignedRoster(planung: Planung): Einsatzkraft[] {
     const assignedIds = new Set(
-      planung.posten.flatMap((p) => p.positions.map((pos) => pos.assigned?.id)).filter(Boolean),
+      planung.abschnitte
+        .flatMap((a) => a.posten)
+        .flatMap((p) => p.positions.map((pos) => pos.assigned?.id))
+        .filter(Boolean),
     );
     return planung.einsatzkraefte.filter((e) => !assignedIds.has(e.id));
   }

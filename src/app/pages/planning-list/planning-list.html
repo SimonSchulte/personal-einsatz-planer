@@ -1,19 +1,22 @@
 <mat-toolbar color="primary">
   <mat-icon>assignment</mat-icon>
   <span style="margin-left: 8px">Personaleinsatzplanung</span>
-  <span class="spacer"></span>
-  <button mat-stroked-button (click)="loadFromFile()" style="margin-right: 8px">
-    <mat-icon>folder_open</mat-icon>
-    Datei öffnen
-  </button>
-  <button mat-raised-button (click)="createNew()">
-    <mat-icon>add</mat-icon>
-    Neue Planung
-  </button>
 </mat-toolbar>
 
 <div class="list-content">
-  <h2>Planungen</h2>
+  <div class="list-actions">
+    <h2>Planungen</h2>
+    <div class="list-actions-buttons">
+      <button mat-stroked-button (click)="loadFromFile()">
+        <mat-icon>folder_open</mat-icon>
+        Datei öffnen
+      </button>
+      <button mat-raised-button color="primary" (click)="createNew()">
+        <mat-icon>add</mat-icon>
+        Neue Planung
+      </button>
+    </div>
+  </div>
 
   @if (planungen().length === 0) {
     <p class="empty-hint">Noch keine Planungen vorhanden. Erstelle eine neue Planung.</p>
@@ -30,7 +33,7 @@
           </mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
-          <p>{{ planung.posten.length }} Posten · {{ planung.einsatzkraefte.length }} Einsatzkräfte</p>
+          <p>{{ planung.abschnitte.length }} Abschnitte · {{ planung.einsatzkraefte.length }} Einsatzkräfte</p>
         </mat-card-content>
         <mat-card-actions>
           <button mat-button color="primary" (click)="openPlanung(planung.id); $event.stopPropagation()">

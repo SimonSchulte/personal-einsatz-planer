@@ -12,3 +12,54 @@ body {
   margin: 0;
   font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
+
+html {
+  // Primary = Dunkelmarineblau
+  --mat-sys-primary: #000548;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #c7ccd9;
+  --mat-sys-on-primary-container: #000548;
+  --mat-sys-primary-fixed: #c7ccd9;
+  --mat-sys-primary-fixed-dim: #a0a8be;
+  --mat-sys-on-primary-fixed: #000548;
+  --mat-sys-inverse-primary: #a0a8be;
+  --mat-sys-surface-tint: #000548;
+
+  // Secondary = Signalrot
+  --mat-sys-secondary: #eb003c;
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-secondary-container: #ffd7df;
+  --mat-sys-on-secondary-container: #6b0019;
+
+  // Tertiary = Signalgelb (Akzent)
+  --mat-sys-tertiary: #b3b600;
+  --mat-sys-on-tertiary: #000000;
+  --mat-sys-tertiary-container: #f5f700;
+  --mat-sys-on-tertiary-container: #1a1a00;
+}
+
+mat-toolbar[color='primary'] {
+  background: #eb003c !important;
+
+  mat-icon {
+    color: #ffffff;
+  }
+}
+
+// PRIMARY — mat-raised-button color="primary" global
+.mat-mdc-raised-button[color='primary'] {
+  --mdc-filled-button-container-color: #000548;
+  --mdc-filled-button-label-text-color: #ffffff;
+}
+
+// SECONDARY — mat-stroked-button global
+.mat-mdc-outlined-button:not([color]) {
+  --mdc-outlined-button-label-text-color: #000548;
+  --mdc-outlined-button-outline-color: #000548;
+  background: #ffffff;
+}
+
+// mat-button (Text-only) dezente Secondary-Variante
+.mat-mdc-button:not([color]) {
+  --mdc-text-button-label-text-color: #000548;
+}

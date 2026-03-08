@@ -43,6 +43,12 @@ export interface Posten {
   positions: Position[];
 }
 
+export interface Abschnitt {
+  id: string;
+  label: string;
+  posten: Posten[];
+}
+
 export interface Einsatzkraft {
   id: string;
   /** "Nachname Vorname" */
@@ -60,7 +66,7 @@ export interface Planung {
   name: string;
   start: string;
   end: string;
-  posten: Posten[];
+  abschnitte: Abschnitt[];
   einsatzkraefte: Einsatzkraft[];
   einsatzleiter: EinsatzkraftRef | null;
 }

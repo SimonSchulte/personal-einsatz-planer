@@ -12,39 +12,266 @@
   overflow: hidden;
 }
 
-.einsatzleiter-field {
+/* ---- Tree Layout ---- */
+.tree-row {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  min-height: 40px;
+  gap: 2px;
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  transition: background 0.1s;
+
+  &--el {
+    min-height: 44px;
+    padding: 0 8px;
+    background: rgba(0, 5, 72, 0.04);
+    gap: 10px;
+    border-bottom: 2px solid rgba(0, 5, 72, 0.15);
+  }
+
+  &--abschnitt {
+    padding: 0 4px 0 0;
+    background: rgba(0, 5, 72, 0.07);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(0, 5, 72, 0.2);
+
+    &:hover {
+      background: rgba(0, 5, 72, 0.1);
+    }
+  }
+
+  &--posten {
+    padding: 0 4px 0 0;
+    background: #fff;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.03);
+    }
+  }
+
+  &--position {
+    padding: 6px 8px 6px 0;
+    min-height: 48px;
+    background: rgba(0, 0, 0, 0.01);
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+  }
+
+  &--selected {
+    background: rgba(0, 5, 72, 0.07) !important;
+  }
+
+  &--add-posten {
+    padding: 4px 0;
+    background: transparent;
+    border-bottom: none;
+  }
+
+  &--add-abschnitt {
+    padding: 12px 16px;
+    background: transparent;
+    border-bottom: none;
+  }
+}
+
+.tree-toggle {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 1px;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  color: rgba(0, 0, 0, 0.54);
+  padding: 0;
 
-  .einsatzleiter-label {
-    font-size: 0.65rem;
-    color: rgba(0, 0, 0, 0.54);
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
+}
+
+.tree-toggle-spacer {
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.tree-label {
+  font-size: 0.875rem;
+  cursor: default;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &--el {
+    font-size: 0.8rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    line-height: 1;
+    letter-spacing: 0.04em;
+    color: rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+    cursor: default;
   }
+}
 
-  .einsatzleiter-select {
-    width: 200px;
-    font-size: 0.875rem;
+.el-select {
+  flex: 1;
+  font-size: 0.875rem;
+  max-width: 220px;
+}
+
+.tree-spacer {
+  flex: 1;
+}
+
+.tree-indent-l1 {
+  width: 56px;
+  flex-shrink: 0;
+}
+
+.drag-handle {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: rgba(0, 0, 0, 0.28);
+  cursor: grab;
+  flex-shrink: 0;
+  margin-left: 4px;
+
+  &:hover {
+    color: rgba(0, 0, 0, 0.6);
   }
+}
+
+.abschnitt-label-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  font-size: inherit;
+  font-weight: inherit;
+  font-family: inherit;
+  color: inherit;
+  min-width: 80px;
+  outline: none;
+  cursor: text;
+  padding: 2px 4px;
+
+  &:hover,
+  &:focus {
+    border-bottom-color: rgba(0, 5, 72, 0.5);
+  }
+}
+
+.abschnitt-children {
+  border-left: 3px solid rgba(0, 5, 72, 0.15);
+  margin-left: 16px;
+}
+
+.posten-drop-list {
+  // CDK drop list container — no extra styles needed
+  &.cdk-drop-list-dragging .tree-row--posten:not(.cdk-drag-placeholder) {
+    transition: transform 200ms ease;
+  }
+}
+
+.posten-drag-item {
+  display: block;
+
+  &.cdk-drag-animating {
+    transition: transform 250ms ease;
+  }
+}
+
+.posten-drag-placeholder {
+  height: 40px;
+  background: rgba(0, 5, 72, 0.08);
+  border: 2px dashed rgba(0, 5, 72, 0.3);
+  border-radius: 4px;
+  margin: 2px 0;
+}
+
+.posten-drag-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #000548;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: rgba(0, 0, 0, 0.4);
+  }
+}
+
+.positions-container {
+  border-left: 2px solid rgba(0, 0, 0, 0.08);
+  margin-left: 56px;
+}
+
+.abschnitt-staerke {
+  margin-right: 4px;
+
+  // Override staerke-row IST colors for abschnitt (on light bg)
+  .staerke-row.ist .status-under { color: #c62828; font-weight: 700; }
+  .staerke-row.ist .status-over  { color: #e65100; font-weight: 700; }
+  .staerke-row.ist .status-met   { color: #2e7d32; font-weight: 700; }
+}
+
+.posten-staerke {
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.6);
+  margin-right: 4px;
+
+  .status-under { color: #c62828; }
+  .status-over  { color: #e65100; }
+  .status-met   { color: #2e7d32; }
+
+  .staerke-sep { color: rgba(0, 0, 0, 0.3); font-weight: normal; }
 }
 
 .editor-toolbar {
   flex-shrink: 0;
   gap: 8px;
 
+
   .planung-name {
-    font-weight: 500;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #dee100;
     margin-left: 4px;
+    letter-spacing: 0.01em;
   }
 
   .date-range {
-    font-size: 0.85em;
-    opacity: 0.85;
-    margin-left: 16px;
+    font-size: 0.8em;
+    opacity: 0.7;
+    margin-left: 12px;
+    padding-left: 12px;
+    border-left: 1px solid rgba(255, 255, 255, 0.25);
   }
 
   .spacer {
@@ -56,6 +283,7 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  margin-top: 8px;
 }
 
 /* ---- Panes ---- */
@@ -63,7 +291,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  border-right: 1px solid rgba(0, 5, 72, 0.2);
 
   &:last-child {
     border-right: none;
@@ -100,13 +328,33 @@
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
+  height: 60px;
+  box-sizing: border-box;
+  overflow: hidden;
   font-weight: 500;
-  background: #f5f5f5;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  background: #000548;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   flex-shrink: 0;
 
   .spacer {
     flex: 1;
+  }
+
+  button.mat-icon-button mat-icon,
+  button[mat-icon-button] mat-icon {
+    color: #ffffff;
+  }
+
+  .staerke-row.ist {
+    .staerke-label, .staerke-num, .staerke-sep { color: rgba(255, 255, 255, 0.9); }
+    .status-under { color: #ff8a80; font-weight: 700; }
+    .status-over  { color: #ffcc02; font-weight: 700; }
+    .status-met   { color: #69f0ae; font-weight: 700; }
+  }
+
+  .staerke-row.soll {
+    .staerke-label, .staerke-num, .staerke-sep { color: rgba(255, 255, 255, 0.45); }
   }
 }
 
@@ -228,8 +476,8 @@
   border: 1px solid rgba(0, 0, 0, 0.08);
 
   &.available {
-    background: #e8f5e9;
-    border-color: #a5d6a7;
+    background: rgba(222, 225, 0, 0.22);
+    border-color: #b3b600;
   }
 
   .ek-name {
@@ -273,15 +521,11 @@
   color: #666;
 }
 
-/* ---- Posten Tree ---- */
+/* ---- Tree Scroll ---- */
 .tree-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
-
-  .mat-expansion-panel {
-    margin-bottom: 8px;
-  }
+  padding: 0;
 }
 
 .posten-fahrzeug-text {
@@ -309,38 +553,17 @@
   width: 100%;
 }
 
-.position-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 4px 0;
-}
-
-.position-row {
+.tree-row--position {
   display: grid;
   grid-template-columns: 1fr auto 1.6fr;
-  align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #fafafa;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-
-  &:hover {
-    background: #f0f0f0;
-  }
-
-  &.selected {
-    border-color: #1976d2;
-    background: #e3f2fd;
-  }
+  padding-right: 8px;
 }
 
 .position-label {
   font-size: 0.875rem;
   font-weight: 500;
+  padding-right: 12px;
 }
 
 .position-reqs {
@@ -383,16 +606,27 @@
   }
 
   &--danger {
-    color: #c62828;
+    color: #eb003c;
 
     &:hover {
-      background: rgba(198, 40, 40, 0.08);
+      background: rgba(235, 0, 60, 0.08);
     }
   }
 }
 
 .add-posten-row {
   padding: 8px 12px;
+
+  button[mat-stroked-button] {
+    color: #000548;
+    border-color: #000548;
+    background: #ffffff;
+  }
+}
+
+.tree-row--add-abschnitt button[mat-stroked-button] {
+  color: #000548;
+  border-color: rgba(0, 5, 72, 0.4);
 }
 
 .position-assigned {
