@@ -62,6 +62,7 @@ export interface Planung {
   name: string;
   start: string;
   end: string;
+  beschreibung?: string | null;
   posten: Posten[];
   einsatzkraefte: Einsatzkraft[];
   einsatzleiter: EinsatzkraftRef | null;
@@ -71,7 +72,7 @@ export interface Planung {
 
 export interface PepFile {
   version: string;
-  meta: { exportedAt: string; locale: string };
+  meta: { exportedAt: string; taktischeZeit?: string; locale: string };
   planung: Planung;
 }
 

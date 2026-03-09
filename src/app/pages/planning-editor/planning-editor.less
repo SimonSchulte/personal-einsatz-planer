@@ -52,6 +52,38 @@
   }
 }
 
+.editor-subbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: #fafafa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+
+  .subbar-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: rgba(0, 0, 0, 0.38);
+    flex-shrink: 0;
+  }
+
+  .subbar-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.875rem;
+    color: rgba(0, 0, 0, 0.87);
+    font-family: inherit;
+
+    &::placeholder {
+      color: rgba(0, 0, 0, 0.38);
+    }
+  }
+}
+
 .editor-body {
   display: flex;
   flex: 1;

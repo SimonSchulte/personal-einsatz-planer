@@ -27,6 +27,7 @@ export class PlanungStoreService {
       name,
       start: new Date().toISOString(),
       end: new Date().toISOString(),
+      beschreibung: null,
       posten: [],
       einsatzkraefte: [],
       einsatzleiter: null,

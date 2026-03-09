@@ -23,6 +23,7 @@ import { SaveLoadService } from '../../services/save-load.service';
 import { AppModeService } from '../../services/app-mode.service';
 import { EfsApiService } from '../../services/efs-api.service';
 import { ImportService } from '../../services/import.service';
+import { PdfExportService } from '../../services/pdf-export.service';
 import {
   Einsatzkraft,
   Fahrzeug,
@@ -90,6 +91,7 @@ export class PlanningEditor {
   readonly appMode = inject(AppModeService);
   private readonly efsApi = inject(EfsApiService);
   private readonly importService = inject(ImportService);
+  private readonly pdfExport = inject(PdfExportService);
 
   readonly planung = this.store.active;
   readonly efsUpdating = signal(false);
@@ -234,6 +236,12 @@ export class PlanningEditor {
     this.store.applyTemplate(result.planung);
   }
 
+  exportPdf(): void {
+    const p = this.planung();
+    if (!p) return;
+    this.pdfExport.export(p);
+  }
+
   save(): void {
     const p = this.planung();
     if (!p) return;
@@ -265,6 +273,12 @@ export class PlanningEditor {
   goBack(): void {
     this.store.closePlanung();
     this.router.navigate(['/']);
+  }
+
+  updateBeschreibung(value: string): void {
+    const p = this.planung();
+    if (!p) return;
+    this.store.updateActive({ ...p, beschreibung: value || null });
   }
 
   setEinsatzleiter(id: string | null): void {

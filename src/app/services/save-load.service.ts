@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Planung, PepFile } from '../models/planung.model';
+import { formatTaktischeZeit } from '../utils/taktische-zeit';
 
 const CURRENT_VERSION = '1.0';
 
@@ -8,7 +9,11 @@ export class SaveLoadService {
   save(planung: Planung): void {
     const pepFile: PepFile = {
       version: CURRENT_VERSION,
-      meta: { exportedAt: new Date().toISOString(), locale: 'de-DE' },
+      meta: {
+        exportedAt: new Date().toISOString(),
+        taktischeZeit: formatTaktischeZeit(new Date()),
+        locale: 'de-DE',
+      },
       planung,
     };
     const json = JSON.stringify(pepFile, null, 2);
@@ -16,7 +21,7 @@ export class SaveLoadService {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${planung.name}.pep.json`;
+    a.download = `${planung.name}_${formatTaktischeZeit(new Date())}.pep.json`;
     a.click();
     URL.revokeObjectURL(url);
   }

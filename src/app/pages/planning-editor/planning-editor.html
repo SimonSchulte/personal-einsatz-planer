@@ -69,10 +69,21 @@
       <button mat-icon-button matTooltip="Speichern" (click)="save()">
         <mat-icon>save</mat-icon>
       </button>
-      <button mat-icon-button matTooltip="PDF exportieren">
+      <button mat-icon-button matTooltip="PDF exportieren" (click)="exportPdf()">
         <mat-icon>picture_as_pdf</mat-icon>
       </button>
     </mat-toolbar>
+
+    <!-- Description Sub-Bar -->
+    <div class="editor-subbar">
+      <mat-icon class="subbar-icon">notes</mat-icon>
+      <input
+        class="subbar-input"
+        placeholder="Beschreibung (Einsatzort, Lage, Anmerkungen …)"
+        [value]="planung()?.beschreibung ?? ''"
+        (blur)="updateBeschreibung($any($event.target).value)"
+      />
+    </div>
 
     <!-- Three-pane layout -->
     <div class="editor-body" cdkDropListGroup>
