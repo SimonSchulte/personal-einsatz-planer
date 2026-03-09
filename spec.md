@@ -8,6 +8,29 @@
 
 ---
 
+## Deployment-Modi (AppMode)
+
+The app supports two modes, selectable via an API-Key dialog on the dashboard:
+
+| Mode | Description |
+|---|---|
+| `standalone` | Default; local plannings only, no API key required. |
+| `connected-to-efs-api` | API key stored in `localStorage` (`pep_efs_api_key`); unlocks EFS/HiOrg-Server features. |
+
+Mode switch is triggered via the API-Key dialog on the Planning List / Dashboard.
+
+---
+
+## EFS-API-Integration (HiOrg-Server)
+
+- **API endpoint:** `/api/efs/` — form-encoded POST, `version=2`
+- **Actions:** `checkapikey`, `getveranstaltungen`, `getveranstaltung` (with `id`)
+- **Dashboard:** Shows EFS Einsatz list (upcoming / past). Clicking an Einsatz creates a new Planung with `hiorg_einsatz_id` set and loads Einsatzkräfte in the background.
+- **Editor:** Sync button updates Einsatzkräfte from EFS (merge by `hiorg_org_id`, then name).
+- **Qualification mapping:** `med_qual` / `fuehr_qual` strings from EFS are mapped to Taktisch / Medizinisch enum values.
+
+---
+
 ## Core Concepts / Domain Model
 
 ### Planung (Planning)
@@ -21,6 +44,7 @@
 | `posten` | `Posten[]` |
 | `einsatzkraefte` | `Einsatzkraft[]` (the roster) |
 | `einsatzleiter` | `EinsatzkraftRef \| null` |
+| `hiorg_einsatz_id` | `string \| undefined` — ID des verknüpften HiOrg-Server-Einsatzes (nur bei EFS-Modus gesetzt) |
 
 ### EinsatzleiterIn
 
@@ -54,7 +78,7 @@
 | `funkruf` | `string` |
 | `hiorgId` | `string \| null` (null for free-text entry) |
 
-**Fahrzeugliste:** 27 vehicles embedded as static data from `fahrzeuge2.csv`.
+**Fahrzeugliste:** 31 vehicles embedded as static data from `fahrzeuge2.csv`.
 Dropdown display format: `"<Funkruf> (<Seriennummer>)"` e.g. `"72 GW-SAN 01 (NRW 8-2077)"`.
 Free-text entry (Funkruf only) sets `seriennummer: null`, `hiorgId: null`.
 
@@ -75,6 +99,7 @@ Free-text entry (Funkruf only) sets `seriennummer: null`, `hiorgId: null`.
 | `name` | `string` (`"Nachname Vorname"`) |
 | `tags` | `{ taktisch?: Taktisch[], medizinisch?: Medizinisch[], zusatz?: string[] }` |
 | `meta` | `{ notes?: string }` *(optional)* |
+| `hiorg_org_id` | `string \| undefined` — Personennummer aus HiOrg-Server (für Sync-Deduplizierung) |
 
 ### EinsatzkraftRef
 
@@ -98,7 +123,7 @@ Qualification lists are ordered arrays (lowest → highest). A higher-level qual
 
 **Medizinisch** (low → high):
 ```
-["EH","SSD","SanH","SAN","FR","RH","RDH","RS","RA","NotSan","A","NA"]
+["EH","SSD","SanH","RH","RS","RA","NotSan","A","NA"]
 ```
 
 > Note: reorder/extend as needed; evaluation uses index position.
@@ -120,9 +145,9 @@ Qualification lists are ordered arrays (lowest → highest). A higher-level qual
 
 | Qualifier(s) | Background | Text |
 |---|---|---|
-| EH, SSD, SanH, SAN | `#C7CCD9` | `#000548` |
-| FR, RS | `#DEE100` | `#000548` |
-| RH, RDH | `#2F8F68` | `#FFFFFF` |
+| EH, SSD, SanH | `#C7CCD9` | `#000548` |
+| RH | `#2F8F68` | `#FFFFFF` |
+| RS | `#DEE100` | `#000548` |
 | RA, NotSan | `#EB003C` | `#FFFFFF` |
 | A, NA | `#4A6FB8` | `#FFFFFF` |
 
@@ -193,11 +218,18 @@ For each requirement type (`taktisch` / `medizinisch`): requirement `R` is satis
 - An assigned Einsatzkraft can be dragged back to the roster to unassign.
 - **Swap:** dropping a person onto an already-filled position swaps the two.
 
+### Rechtsklick-Zuweisung (Kontextmenü)
+
+- Right-click on an unassigned Einsatzkraft in the roster opens a context menu at the mouse position.
+- The menu lists all Posten (as group headers) with their free Positions including requirement chips.
+- Clicking a Position assigns the Einsatzkraft (equivalent to drag & drop; no swap).
+
 ---
 
 ## Persistence & File Format
 
 - **Save/Load:** local JSON file. Filename convention: `<nameofplanung>.pep.json`
+- **Vorlage importieren:** Loads a `.pep.json` and imports only the Posten/Position structure (including Fahrzeuge) into the active Planung. Existing Einsatzkräfte and assignments are mapped by `hiorg_org_id` (then name) where possible. Used to reuse Posten structures across plannings.
 
 ### JSON Schema (high-level)
 
@@ -250,7 +282,7 @@ For each requirement type (`taktisch` / `medizinisch`): requirement `R` is satis
   - **Right pane / inspector:** Position details, notes, quick assign suggestions (best matches).
   - **Top bar:** Name, Start, End, Save, Export, Undo. Includes **EinsatzleiterIn** dropdown (populated from roster).
   - **Posten management:** A **"+ Neuer Posten"** button appends a new Posten. Each Posten has a **delete button** (requires confirmation) and a **"Leeren"** button (clears all `Position.assigned` values within that Posten, requires confirmation).
-  - **Fahrzeugauswahl:** Dropdown at the Posten header with search/filter over the 27 vehicles plus a "Freie Eingabe" option. The selected Fahrzeug's Funkruf is shown as plain text next to the Posten label (no badge). The `hiorgId` is persisted in JSON but never shown in the UI.
+  - **Fahrzeugauswahl:** Dropdown at the Posten header with search/filter over the 31 vehicles plus a "Freie Eingabe" option. The selected Fahrzeug's Funkruf is shown as plain text next to the Posten label (no badge). The `hiorgId` is persisted in JSON but never shown in the UI.
 
 ### Components
 
@@ -263,6 +295,17 @@ For each requirement type (`taktisch` / `medizinisch`): requirement `R` is satis
 | `SaveLoadDialog` | File picker |
 | `PdfExportService` | Generates PDF export |
 | `MatchService` | Qualification evaluation logic |
+
+### Stärke-Berechnung
+
+**Role classification** (based on highest taktisch tag):
+- **Führer (F):** ZF, VF
+- **Unterführer (UF):** GF
+- **Helfer (H):** all others (including no taktisch tags)
+
+**Display:** `Ist F/UF/H/Ges` vs `Soll F/UF/H/Ges` — shown per Posten (panel header) and overall (pane header). Each Ist value is color-coded against its Soll value (see Stärke-Farbkodierung).
+
+**Soll** is derived from the `requirements.taktisch` fields of the Positions within the Posten.
 
 ### Accessibility
 

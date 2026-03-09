@@ -1,6 +1,6 @@
 export const TAKTISCH_ORDER = ['H', 'KSH', 'GF', 'ZF', 'GdSA', 'VF'] as const;
 export const MEDIZINISCH_ORDER = [
-  'EH', 'SSD', 'SanH', 'SAN', 'FR', 'RS', 'RA', 'NotSan', 'RH', 'RDH', 'A', 'NA',
+  'EH', 'SSD', 'SanH', 'RH', 'RS', 'RA', 'NotSan', 'A', 'NA',
 ] as const;
 
 export type Taktisch = (typeof TAKTISCH_ORDER)[number];
@@ -53,6 +53,8 @@ export interface Einsatzkraft {
     zusatz?: string[];
   };
   meta?: { notes?: string };
+  /** HiOrg-Server org-scoped ID; set when imported from EFS-API */
+  hiorg_org_id?: string;
 }
 
 export interface Planung {
@@ -63,10 +65,35 @@ export interface Planung {
   posten: Posten[];
   einsatzkraefte: Einsatzkraft[];
   einsatzleiter: EinsatzkraftRef | null;
+  /** HiOrg-Server Einsatz-ID; set when loaded from EFS-API */
+  hiorg_einsatz_id?: string;
 }
 
 export interface PepFile {
   version: string;
   meta: { exportedAt: string; locale: string };
   planung: Planung;
+}
+
+// ── EFS-API domain types ────────────────────────────────────────────────────
+
+export interface EfsEinsatz {
+  id: string;
+  titel: string;
+  datum_von: string;
+  datum_bis: string;
+  ort?: string;
+}
+
+export interface EfsEinsatzkraft {
+  hiorg_org_id: string;
+  vorname: string;
+  nachname: string;
+  ausbildungen?: string[];
+}
+
+export interface EfsEinsatzmittel {
+  id: string;
+  bezeichnung?: string;
+  funkruf?: string;
 }

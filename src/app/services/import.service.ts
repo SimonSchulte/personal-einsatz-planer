@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {
   Einsatzkraft,
+  EfsEinsatzkraft,
   Medizinisch,
   MEDIZINISCH_ORDER,
   Taktisch,
@@ -52,5 +53,32 @@ export class ImportService {
     }
 
     return result;
+  }
+
+  /** Maps an EfsEinsatzkraft to our Einsatzkraft domain model. */
+  mapEfsEinsatzkraft(ek: EfsEinsatzkraft): Einsatzkraft {
+    const taktisch: Taktisch[] = [];
+    const medizinisch: Medizinisch[] = [];
+    const zusatz: string[] = [];
+
+    for (const ausbildung of ek.ausbildungen ?? []) {
+      const tag = ausbildung.trim().toUpperCase();
+      const taktischMatch = TAKTISCH_ORDER.find((t) => t.toUpperCase() === tag);
+      const medizinischMatch = MEDIZINISCH_ORDER.find((m) => m.toUpperCase() === tag);
+      if (taktischMatch) taktisch.push(taktischMatch);
+      else if (medizinischMatch) medizinisch.push(medizinischMatch);
+      else if (ausbildung.trim()) zusatz.push(ausbildung.trim());
+    }
+
+    return {
+      id: crypto.randomUUID(),
+      name: `${ek.nachname} ${ek.vorname}`.trim(),
+      hiorg_org_id: ek.hiorg_org_id,
+      tags: {
+        ...(taktisch.length ? { taktisch } : {}),
+        ...(medizinisch.length ? { medizinisch } : {}),
+        ...(zusatz.length ? { zusatz } : {}),
+      },
+    };
   }
 }

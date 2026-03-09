@@ -16,7 +16,11 @@
       "WebFetch(domain:prototyp.digital)",
       "WebFetch(domain:angular.love)",
       "WebFetch(domain:angular-material.dev)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "WebFetch(domain:bitbucket.org)",
+      "Bash(gh issue:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git:*)"
     ]
   }
 }

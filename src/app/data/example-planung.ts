@@ -10,7 +10,7 @@ export const EXAMPLE_PLANUNG: Planung = {
     { id: 'ek-02', name: 'Schmidt Peter', tags: { taktisch: ['H'], medizinisch: ['A'] } },
     { id: 'ek-03', name: 'Fischer Laura', tags: { taktisch: ['ZF'], medizinisch: ['NotSan'] } },
     { id: 'ek-04', name: 'Wagner Klaus', tags: { taktisch: ['GF'], medizinisch: ['RS'] } },
-    { id: 'ek-05', name: 'Becker Sophie', tags: { taktisch: ['KSH'], medizinisch: ['SAN'] } },
+    { id: 'ek-05', name: 'Becker Sophie', tags: { taktisch: ['KSH'], medizinisch: ['RH'] } },
     { id: 'ek-06', name: 'Hoffmann Max', tags: { taktisch: ['H'], medizinisch: ['EH'] } },
     { id: 'ek-07', name: 'Schulz Lena', tags: { taktisch: ['GdSA'], medizinisch: ['NA'] } },
     { id: 'ek-08', name: 'Koch Thomas', tags: { taktisch: ['H'], medizinisch: ['RS'] } },
@@ -46,7 +46,7 @@ export const EXAMPLE_PLANUNG: Planung = {
         {
           id: 'pos-02-01',
           label: 'Fahrer',
-          requirements: { taktisch: 'H', medizinisch: 'SAN' },
+          requirements: { taktisch: 'H', medizinisch: 'RH' },
           assigned: { id: 'ek-06', name: 'Hoffmann Max' },
         },
         {
@@ -65,7 +65,7 @@ export const EXAMPLE_PLANUNG: Planung = {
         {
           id: 'pos-03-01',
           label: 'Postenführer',
-          requirements: { taktisch: 'GF', medizinisch: 'SAN' },
+          requirements: { taktisch: 'GF', medizinisch: 'RH' },
           assigned: { id: 'ek-01', name: 'Meyer Anna' },
         },
         {

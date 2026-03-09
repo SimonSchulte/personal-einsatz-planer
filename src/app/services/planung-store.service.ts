@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Einsatzkraft, FahrzeugRef, Planung, Posten } from '../models/planung.model';
+import { Einsatzkraft, EfsEinsatz, FahrzeugRef, Planung, Posten } from '../models/planung.model';
 import { EXAMPLE_PLANUNG } from '../data/example-planung';
 
 @Injectable({ providedIn: 'root' })
@@ -151,6 +151,79 @@ export class PlanungStoreService {
 
     this.updateActive({ ...active, einsatzkraefte: merged, posten: newPosten });
     return { removedNames: removed.map((e) => e.name), affectedAssignments };
+  }
+
+  /** Creates a new Planung from an EFS event and sets it as active. */
+  openEfsEinsatz(einsatz: EfsEinsatz): Planung {
+    const existing = this._planungen().find((p) => p.hiorg_einsatz_id === einsatz.id);
+    if (existing) {
+      this._active.set(existing);
+      return existing;
+    }
+    const planung: Planung = {
+      id: crypto.randomUUID(),
+      name: einsatz.titel,
+      start: einsatz.datum_von,
+      end: einsatz.datum_bis,
+      posten: [],
+      einsatzkraefte: [],
+      einsatzleiter: null,
+      hiorg_einsatz_id: einsatz.id,
+    };
+    this._planungen.update((list) => [...list, planung]);
+    this._active.set(planung);
+    return planung;
+  }
+
+  /**
+   * Merges incoming Einsatzkräfte into the active Planung without overwriting existing ones.
+   * Deduplication uses hiorg_org_id first, then full name.
+   */
+  mergeEfsEinsatzkraefte(incoming: Einsatzkraft[]): void {
+    const active = this._active();
+    if (!active) return;
+    const current = active.einsatzkraefte;
+    const existingHiorgIds = new Set(current.map((e) => e.hiorg_org_id).filter(Boolean));
+    const existingNames = new Set(current.map((e) => e.name));
+    const toAdd = incoming.filter(
+      (e) =>
+        !(e.hiorg_org_id && existingHiorgIds.has(e.hiorg_org_id)) && !existingNames.has(e.name),
+    );
+    if (toAdd.length > 0) {
+      this.updateActive({ ...active, einsatzkraefte: [...current, ...toAdd] });
+    }
+  }
+
+  applyTemplate(template: Planung): void {
+    const active = this._active();
+    if (!active) return;
+
+    const hiorgMap = new Map(
+      active.einsatzkraefte
+        .filter((e) => e.hiorg_org_id)
+        .map((e) => [e.hiorg_org_id!, e]),
+    );
+
+    const templateEkMap = new Map(
+      template.einsatzkraefte.map((e) => [e.id, e.hiorg_org_id]),
+    );
+
+    const resolvedPosten = template.posten.map((posten) => ({
+      ...posten,
+      id: crypto.randomUUID(),
+      positions: posten.positions.map((pos) => {
+        if (!pos.assigned) return { ...pos, id: crypto.randomUUID() };
+        const templateHiorgId = templateEkMap.get(pos.assigned.id);
+        const matched = templateHiorgId ? hiorgMap.get(templateHiorgId) : undefined;
+        return {
+          ...pos,
+          id: crypto.randomUUID(),
+          assigned: matched ? { id: matched.id, name: matched.name } : null,
+        };
+      }),
+    }));
+
+    this.updateActive({ ...active, posten: resolvedPosten });
   }
 
   unassignFromPosition(postenId: string, positionId: string): void {
