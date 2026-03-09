@@ -208,6 +208,12 @@ export class PlanningEditor {
     }
   }
 
+  async importTemplate(): Promise<void> {
+    const result = await this.saveLoad.load();
+    if (!result) return;
+    this.store.applyTemplate(result.planung);
+  }
+
   save(): void {
     const p = this.planung();
     if (!p) return;

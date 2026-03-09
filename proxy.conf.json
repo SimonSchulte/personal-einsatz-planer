@@ -1,0 +1,8 @@
+{
+  "/api/efs": {
+    "target": "https://www.hiorg-server.de",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

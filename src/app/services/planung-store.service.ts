@@ -194,6 +194,38 @@ export class PlanungStoreService {
     }
   }
 
+  applyTemplate(template: Planung): void {
+    const active = this._active();
+    if (!active) return;
+
+    const hiorgMap = new Map(
+      active.einsatzkraefte
+        .filter((e) => e.hiorg_org_id)
+        .map((e) => [e.hiorg_org_id!, e]),
+    );
+
+    const templateEkMap = new Map(
+      template.einsatzkraefte.map((e) => [e.id, e.hiorg_org_id]),
+    );
+
+    const resolvedPosten = template.posten.map((posten) => ({
+      ...posten,
+      id: crypto.randomUUID(),
+      positions: posten.positions.map((pos) => {
+        if (!pos.assigned) return { ...pos, id: crypto.randomUUID() };
+        const templateHiorgId = templateEkMap.get(pos.assigned.id);
+        const matched = templateHiorgId ? hiorgMap.get(templateHiorgId) : undefined;
+        return {
+          ...pos,
+          id: crypto.randomUUID(),
+          assigned: matched ? { id: matched.id, name: matched.name } : null,
+        };
+      }),
+    }));
+
+    this.updateActive({ ...active, posten: resolvedPosten });
+  }
+
   unassignFromPosition(postenId: string, positionId: string): void {
     const active = this._active();
     if (!active) return;

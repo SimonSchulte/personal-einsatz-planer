@@ -87,7 +87,7 @@
         </table>
       }
 
-      @if (efsEinsaetze().length === 0) {
+      @if (upcomingEinsaetze().length === 0 && pastEinsaetze().length === 0) {
         <p class="empty-hint">
           Keine Veranstaltungen gefunden. Stelle sicher, dass dein API-Key korrekt ist und die
           Veranstaltungen für den EFS-Abruf freigegeben sind.

@@ -53,13 +53,19 @@ export class PlanningList implements OnInit {
 
   readonly upcomingEinsaetze = computed(() =>
     this.efsEinsaetze()
-      .filter((e) => new Date(e.datum_bis) >= new Date())
+      .filter((e) => {
+        const d = new Date(e.datum_bis);
+        return isNaN(d.getTime()) || d >= new Date();
+      })
       .sort((a, b) => new Date(a.datum_von).getTime() - new Date(b.datum_von).getTime()),
   );
 
   readonly pastEinsaetze = computed(() =>
     this.efsEinsaetze()
-      .filter((e) => new Date(e.datum_bis) < new Date())
+      .filter((e) => {
+        const d = new Date(e.datum_bis);
+        return !isNaN(d.getTime()) && d < new Date();
+      })
       .sort((a, b) => new Date(b.datum_von).getTime() - new Date(a.datum_von).getTime()),
   );
 

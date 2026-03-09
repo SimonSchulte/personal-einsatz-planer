@@ -4,11 +4,22 @@ import { firstValueFrom } from 'rxjs';
 import { AppModeService } from './app-mode.service';
 import { EfsEinsatz, EfsEinsatzkraft, EfsEinsatzmittel } from '../models/planung.model';
 
-const EFS_API_URL = 'https://www.hiorg-server.de/api/efs/v2/';
+const EFS_API_URL = '/api/efs/';
 
 // Raw response shapes from the HiOrg EFS-API
 interface EfsApiEnvelope {
   status: string;
+  fehler?: string;
+}
+
+interface EfsCheckApiKeyResponse extends EfsApiEnvelope {
+  orga?: string;
+  hiorg_org_id?: string;
+}
+
+export interface EfsCheckApiKeyResult {
+  orga: string;
+  hiorg_org_id: string;
 }
 
 interface EfsApiVeranstaltungenResponse extends EfsApiEnvelope {
@@ -18,21 +29,27 @@ interface EfsApiVeranstaltungenResponse extends EfsApiEnvelope {
 interface EfsApiEinsatz {
   id: string | number;
   titel?: string;
+  stichwort?: string;
   datum_von?: string;
   datum_bis?: string;
+  beginn?: string | number;
+  end?: string | number;
   ort?: string;
 }
 
 interface EfsApiEinsatzkraft {
-  id?: string | number;
+  hiorg_ek_id?: string | number;
   hiorg_org_id?: string | number;
   vorname?: string;
   nachname?: string;
-  ausbildungen?: string[];
+  fw_qual?: string;
+  med_qual?: string;
+  fuehr_qual?: string;
+  bes_ausbild?: string;
 }
 
 interface EfsApiDetailResponse extends EfsApiEnvelope {
-  einsatzkraefte_imeinsatz?: EfsApiEinsatzkraft[];
+  einsatzkraefte_imeinsatz?: Record<string, EfsApiEinsatzkraft>;
   einsatzmittel_imeinsatz?: Record<string, unknown>[];
 }
 
@@ -53,9 +70,21 @@ export class EfsApiService {
   private buildBody(action: string, extra: Record<string, string> = {}): string {
     return new URLSearchParams({
       apikey: this.appMode.apiKey() ?? '',
+      version: '2',
       action,
       ...extra,
     }).toString();
+  }
+
+  async checkApiKey(key: string): Promise<EfsCheckApiKeyResult> {
+    const body = new URLSearchParams({ apikey: key, version: '2', action: 'checkapikey' }).toString();
+    const response = await firstValueFrom(
+      this.http.post<EfsCheckApiKeyResponse>(EFS_API_URL, body, { headers: this.headers }),
+    );
+    if (response.status !== 'OK' || !response.orga || !response.hiorg_org_id) {
+      throw new Error(response.fehler ?? 'Ungültiger API-Key');
+    }
+    return { orga: response.orga, hiorg_org_id: response.hiorg_org_id };
   }
 
   async getVeranstaltungen(): Promise<EfsEinsatz[]> {
@@ -80,7 +109,7 @@ export class EfsApiService {
     );
     if (response.status !== 'OK') return null;
     return {
-      einsatzkraefte: (response.einsatzkraefte_imeinsatz ?? []).map((e) =>
+      einsatzkraefte: Object.values(response.einsatzkraefte_imeinsatz ?? {}).map((e) =>
         this.mapEinsatzkraft(e),
       ),
       einsatzmittel: (response.einsatzmittel_imeinsatz ?? []).map((e) =>
@@ -90,22 +119,51 @@ export class EfsApiService {
   }
 
   private mapEinsatz(e: EfsApiEinsatz): EfsEinsatz {
+    const toDateStr = (v?: string | number) =>
+      v == null ? '' : typeof v === 'number' ? new Date(v * 1000).toISOString() : v;
     return {
       id: String(e.id),
-      titel: e.titel ?? '',
-      datum_von: e.datum_von ?? '',
-      datum_bis: e.datum_bis ?? '',
+      titel: e.titel ?? e.stichwort ?? '',
+      datum_von: e.datum_von ?? toDateStr(e.beginn),
+      datum_bis: e.datum_bis ?? toDateStr(e.end),
       ort: e.ort,
     };
   }
 
   private mapEinsatzkraft(e: EfsApiEinsatzkraft): EfsEinsatzkraft {
     return {
-      hiorg_org_id: String(e.hiorg_org_id ?? e.id ?? ''),
+      hiorg_org_id: String(e.hiorg_ek_id ?? e.hiorg_org_id ?? ''),
       vorname: e.vorname ?? '',
       nachname: e.nachname ?? '',
-      ausbildungen: e.ausbildungen ?? [],
+      ausbildungen: this.qualToAusbildungen(e),
     };
+  }
+
+  private qualToAusbildungen(e: EfsApiEinsatzkraft): string[] {
+    const result: string[] = [];
+    const medMap: Record<string, string> = {
+      'Erste-Hilfe': 'EH',
+      'Sanitätshelfer/in': 'SanH',
+      'Rettungshelfer/in': 'RH',
+      'Rettungssanitäter/in': 'RS',
+      'Rettungsassistent/in': 'RA',
+      'Notfallsanitäter/in': 'NotSan',
+      'Arzt/Ärztin': 'A',
+      'Notarzt': 'NA',
+    };
+    const taktMap: Record<string, string> = {
+      'Helfer:in in Ausbildung': 'H',
+      'Gruppenführer:in': 'GF',
+      'Zugführer:in': 'ZF',
+      'ZF mit Stabsausbildung': 'ZF',
+      'Verbandsführer:in': 'VF',
+      'Verbandführer:in': 'VF',
+    };
+    if (e.med_qual) result.push(medMap[e.med_qual] ?? e.med_qual);
+    if (e.fuehr_qual) result.push(taktMap[e.fuehr_qual] ?? e.fuehr_qual);
+    if (e.fw_qual) result.push(e.fw_qual);
+    if (e.bes_ausbild) result.push(e.bes_ausbild);
+    return result.filter(Boolean);
   }
 
   private mapEinsatzmittel(e: Record<string, unknown>): EfsEinsatzmittel {

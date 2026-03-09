@@ -28,6 +28,10 @@
           <mat-icon>sync</mat-icon>
         </button>
       }
+      <button mat-stroked-button (click)="importTemplate()" matTooltip="Posten-Struktur aus .pep.json übernehmen">
+        <mat-icon>file_upload</mat-icon>
+        Vorlage importieren
+      </button>
       <button mat-icon-button matTooltip="Speichern" (click)="save()">
         <mat-icon>save</mat-icon>
       </button>
