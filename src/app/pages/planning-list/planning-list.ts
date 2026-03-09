@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { DatePipe, formatDate } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -130,7 +130,7 @@ export class PlanningList implements OnInit {
   }
 
   createNew(): void {
-    const name = `Neue Planung ${new Date().toLocaleDateString('de-DE')}`;
+    const name = `Neue Planung ${formatDate(new Date(), 'dd.MM.yyyy', 'de-DE')}`;
     this.store.createPlanung(name);
     this.router.navigate(['/editor']);
   }

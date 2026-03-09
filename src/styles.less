@@ -12,3 +12,34 @@ body {
   margin: 0;
   font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
+
+/* B-1: Global focus indicators */
+:focus-visible {
+  outline: 2px solid #000548;
+  outline-offset: 2px;
+}
+.mat-mdc-icon-button:focus-visible {
+  outline: 2px solid #000548;
+  outline-offset: 2px;
+}
+
+/* B-2: Mobile guard overlay */
+.mobile-unsupported {
+  display: none;
+}
+@media (max-width: 1023px) {
+  .mobile-unsupported {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #fff;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.87);
+  }
+}

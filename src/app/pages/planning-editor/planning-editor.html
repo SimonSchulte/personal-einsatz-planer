@@ -1,3 +1,6 @@
+<div class="mobile-unsupported">
+  Diese Anwendung ist für Desktop-Geräte optimiert (mind. 1024px Breite).
+</div>
 @if (planung(); as p) {
   <div class="editor-shell">
     <!-- Invisible context menu trigger positioned at cursor -->
@@ -62,7 +65,7 @@
           <mat-icon>sync</mat-icon>
         </button>
       }
-      <button mat-stroked-button (click)="importTemplate()" matTooltip="Posten-Struktur aus .pep.json übernehmen">
+      <button mat-button (click)="importTemplate()" matTooltip="Posten-Struktur aus .pep.json übernehmen">
         <mat-icon>file_upload</mat-icon>
         Vorlage importieren
       </button>
@@ -79,7 +82,7 @@
       <mat-icon class="subbar-icon">notes</mat-icon>
       <input
         class="subbar-input"
-        placeholder="Beschreibung (Einsatzort, Lage, Anmerkungen …)"
+        placeholder="Einsatzort, Lage, Anmerkungen …"
         [value]="planung()?.beschreibung ?? ''"
         (blur)="updateBeschreibung($any($event.target).value)"
       />
@@ -182,26 +185,26 @@
           <mat-icon>account_tree</mat-icon>
           <span>Einsatzplan</span>
           <span class="spacer"></span>
-          <div class="staerke-block">
-            <div class="staerke-row ist">
-              <span class="staerke-label">Ist</span>
-              <span class="staerke-num" [class]="staerkeStatus(planungIst(p).fuhrer, planungSoll(p).fuhrer)">{{ planungIst(p).fuhrer }}</span>
-              <span class="staerke-sep">/</span>
-              <span class="staerke-num" [class]="staerkeStatus(planungIst(p).unterfuehrer, planungSoll(p).unterfuehrer)">{{ planungIst(p).unterfuehrer }}</span>
-              <span class="staerke-sep">/</span>
-              <span class="staerke-num" [class]="staerkeStatus(planungIst(p).helfer, planungSoll(p).helfer)">{{ planungIst(p).helfer }}</span>
-              <span class="staerke-sep">/</span>
-              <span class="staerke-num" [class]="staerkeStatus(planungIst(p).gesamt, planungSoll(p).gesamt)"><u>{{ planungIst(p).gesamt }}</u></span>
+          <div class="staerke-block" role="grid" aria-label="Gesamtstärke">
+            <div class="staerke-row ist" role="row">
+              <span class="staerke-label" role="gridcell">Ist</span>
+              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).fuhrer, planungSoll(p).fuhrer)">{{ planungIst(p).fuhrer }}</span>
+              <span class="staerke-sep" role="gridcell">/</span>
+              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).unterfuehrer, planungSoll(p).unterfuehrer)">{{ planungIst(p).unterfuehrer }}</span>
+              <span class="staerke-sep" role="gridcell">/</span>
+              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).helfer, planungSoll(p).helfer)">{{ planungIst(p).helfer }}</span>
+              <span class="staerke-sep" role="gridcell">/</span>
+              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).gesamt, planungSoll(p).gesamt)"><u>{{ planungIst(p).gesamt }}</u></span>
             </div>
-            <div class="staerke-row soll">
-              <span class="staerke-label">Soll</span>
-              <span class="staerke-num">{{ planungSoll(p).fuhrer }}</span>
-              <span class="staerke-sep">/</span>
-              <span class="staerke-num">{{ planungSoll(p).unterfuehrer }}</span>
-              <span class="staerke-sep">/</span>
-              <span class="staerke-num">{{ planungSoll(p).helfer }}</span>
-              <span class="staerke-sep">/</span>
-              <span class="staerke-num"><u>{{ planungSoll(p).gesamt }}</u></span>
+            <div class="staerke-row soll" role="row">
+              <span class="staerke-label" role="gridcell">Soll</span>
+              <span class="staerke-num" role="gridcell">{{ planungSoll(p).fuhrer }}</span>
+              <span class="staerke-sep" role="gridcell">/</span>
+              <span class="staerke-num" role="gridcell">{{ planungSoll(p).unterfuehrer }}</span>
+              <span class="staerke-sep" role="gridcell">/</span>
+              <span class="staerke-num" role="gridcell">{{ planungSoll(p).helfer }}</span>
+              <span class="staerke-sep" role="gridcell">/</span>
+              <span class="staerke-num" role="gridcell"><u>{{ planungSoll(p).gesamt }}</u></span>
             </div>
           </div>
         </div>
@@ -217,26 +220,26 @@
                   }
                 </mat-panel-title>
                 <mat-panel-description (click)="$event.stopPropagation()">
-                  <div class="staerke-block compact description-spacer">
-                    <div class="staerke-row ist">
-                      <span class="staerke-label">Ist</span>
-                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).fuhrer, postenSoll(posten).fuhrer)">{{ postenIst(posten).fuhrer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).unterfuehrer, postenSoll(posten).unterfuehrer)">{{ postenIst(posten).unterfuehrer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).helfer, postenSoll(posten).helfer)">{{ postenIst(posten).helfer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num" [class]="staerkeStatus(postenIst(posten).gesamt, postenSoll(posten).gesamt)"><u>{{ postenIst(posten).gesamt }}</u></span>
+                  <div class="staerke-block compact description-spacer" role="grid" [attr.aria-label]="'Stärke ' + posten.label">
+                    <div class="staerke-row ist" role="row">
+                      <span class="staerke-label" role="gridcell">Ist</span>
+                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).fuhrer, postenSoll(posten).fuhrer)">{{ postenIst(posten).fuhrer }}</span>
+                      <span class="staerke-sep" role="gridcell">/</span>
+                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).unterfuehrer, postenSoll(posten).unterfuehrer)">{{ postenIst(posten).unterfuehrer }}</span>
+                      <span class="staerke-sep" role="gridcell">/</span>
+                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).helfer, postenSoll(posten).helfer)">{{ postenIst(posten).helfer }}</span>
+                      <span class="staerke-sep" role="gridcell">/</span>
+                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).gesamt, postenSoll(posten).gesamt)"><u>{{ postenIst(posten).gesamt }}</u></span>
                     </div>
-                    <div class="staerke-row soll">
-                      <span class="staerke-label">Soll</span>
-                      <span class="staerke-num">{{ postenSoll(posten).fuhrer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num">{{ postenSoll(posten).unterfuehrer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num">{{ postenSoll(posten).helfer }}</span>
-                      <span class="staerke-sep">/</span>
-                      <span class="staerke-num"><u>{{ postenSoll(posten).gesamt }}</u></span>
+                    <div class="staerke-row soll" role="row">
+                      <span class="staerke-label" role="gridcell">Soll</span>
+                      <span class="staerke-num" role="gridcell">{{ postenSoll(posten).fuhrer }}</span>
+                      <span class="staerke-sep" role="gridcell">/</span>
+                      <span class="staerke-num" role="gridcell">{{ postenSoll(posten).unterfuehrer }}</span>
+                      <span class="staerke-sep" role="gridcell">/</span>
+                      <span class="staerke-num" role="gridcell">{{ postenSoll(posten).helfer }}</span>
+                      <span class="staerke-sep" role="gridcell">/</span>
+                      <span class="staerke-num" role="gridcell"><u>{{ postenSoll(posten).gesamt }}</u></span>
                     </div>
                   </div>
                   <button mat-icon-button class="posten-action-btn" matTooltip="Leeren"
@@ -336,8 +339,8 @@
       <aside class="pane pane-inspector" [class.collapsed]="inspectorCollapsed()">
         <div class="pane-header">
           <button mat-icon-button class="collapse-btn" (click)="toggleInspector()"
-            [matTooltip]="inspectorCollapsed() ? 'Details einblenden' : 'Details ausblenden'">
-            <mat-icon>{{ inspectorCollapsed() ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+            [matTooltip]="inspectorCollapsed() ? 'Inspektor öffnen' : 'Details ausblenden'">
+            <mat-icon>{{ inspectorCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
           </button>
           @if (!inspectorCollapsed()) {
             <mat-icon>info</mat-icon>
@@ -429,8 +432,16 @@
     </div>
   </div>
 } @else {
-  <div class="no-planung">
-    <p>Keine Planung geöffnet.</p>
-    <button mat-raised-button color="primary" (click)="goBack()">Zur Übersicht</button>
+  <div class="editor-shell no-planung-shell">
+    <mat-toolbar color="primary" class="editor-toolbar">
+      <button mat-icon-button (click)="goBack()" matTooltip="Zurück zur Übersicht">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <span style="margin-left: 8px">Personaleinsatzplanung</span>
+    </mat-toolbar>
+    <div class="no-planung">
+      <p>Keine Planung geöffnet.</p>
+      <button mat-raised-button color="primary" (click)="goBack()">Zur Übersicht</button>
+    </div>
   </div>
 }

@@ -1,15 +1,18 @@
+<div class="mobile-unsupported">
+  Diese Anwendung ist für Desktop-Geräte optimiert (mind. 1024px Breite).
+</div>
 <mat-toolbar color="primary">
   <mat-icon>assignment</mat-icon>
-  <span style="margin-left: 8px">Personaleinsatzplanung</span>
+  <span class="toolbar-title">Personaleinsatzplanung</span>
   <span class="spacer"></span>
-  <button mat-icon-button [matTooltip]="appMode.mode() === 'connected-to-efs-api' ? 'HiOrg-Server verbunden' : 'HiOrg-Server konfigurieren'" (click)="openApiKeyDialog()" style="margin-left: 8px">
+  <button mat-icon-button [matTooltip]="appMode.mode() === 'connected-to-efs-api' ? 'HiOrg-Server verbunden' : 'HiOrg-Server verbinden'" (click)="openApiKeyDialog()" class="toolbar-btn">
     <mat-icon>{{ appMode.mode() === 'connected-to-efs-api' ? 'cloud_done' : 'cloud_off' }}</mat-icon>
   </button>
-  <button mat-stroked-button (click)="loadFromFile()" style="margin-right: 8px; margin-left: 8px">
+  <button mat-stroked-button (click)="loadFromFile()" class="toolbar-btn">
     <mat-icon>folder_open</mat-icon>
     Datei öffnen
   </button>
-  <button mat-raised-button (click)="createNew()">
+  <button mat-raised-button (click)="createNew()" class="toolbar-btn">
     <mat-icon>add</mat-icon>
     Neue Planung
   </button>
@@ -95,7 +98,13 @@
   <h2>Lokale Planungen</h2>
 
   @if (planungen().length === 0) {
-    <p class="empty-hint">Noch keine Planungen vorhanden. Erstelle eine neue Planung oder öffne eine Datei.</p>
+    <div class="empty-state">
+      <mat-icon class="empty-state-icon">folder_open</mat-icon>
+      <p class="empty-hint">Noch keine Planungen vorhanden.</p>
+      <button mat-raised-button color="primary" (click)="createNew()">
+        <mat-icon>add</mat-icon> Neue Planung erstellen
+      </button>
+    </div>
   }
 
   <div class="card-grid">
