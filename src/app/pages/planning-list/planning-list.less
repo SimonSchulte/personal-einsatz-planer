@@ -8,11 +8,71 @@
   flex: 1;
 }
 
+.mode-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 12px;
+
+  &.connected {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+}
+
 .list-content {
   padding: 24px;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.einsatz-table {
+  width: 100%;
+  margin-bottom: 24px;
+
+  &.past {
+    opacity: 0.7;
+  }
+}
+
+.einsatz-row {
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.past-header {
+  margin-top: 24px;
+  color: rgba(0, 0, 0, 0.54);
 }
 
 .card-grid {
@@ -31,7 +91,27 @@
   }
 }
 
+.efs-link-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.54);
+  margin: 4px 0 0;
+}
+
+.efs-icon {
+  font-size: 14px;
+  height: 14px;
+  width: 14px;
+}
+
 .empty-hint {
   color: rgba(0, 0, 0, 0.54);
   font-style: italic;
+}
+
+.error-hint {
+  color: #c62828;
+  padding: 8px 0;
 }

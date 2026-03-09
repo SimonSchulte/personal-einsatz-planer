@@ -20,6 +20,14 @@
         </mat-select>
       </div>
       <span class="spacer"></span>
+      @if (appMode.mode() === 'connected-to-efs-api' && p.hiorg_einsatz_id) {
+        <button mat-icon-button
+                [matTooltip]="efsUpdating() ? 'Wird aktualisiert…' : 'Einsatzkräfte aus EFS aktualisieren'"
+                [disabled]="efsUpdating()"
+                (click)="updateFromEfs(p)">
+          <mat-icon>sync</mat-icon>
+        </button>
+      }
       <button mat-icon-button matTooltip="Speichern" (click)="save()">
         <mat-icon>save</mat-icon>
       </button>
@@ -35,6 +43,14 @@
         <div class="pane-header">
           <mat-icon>people</mat-icon>
           <span>Einsatzkräfte ({{ p.einsatzkraefte.length }})</span>
+          @if (appMode.mode() === 'connected-to-efs-api' && p.hiorg_einsatz_id) {
+            <button mat-icon-button
+                    [matTooltip]="efsUpdating() ? 'Wird aktualisiert…' : 'Aus EFS aktualisieren'"
+                    [disabled]="efsUpdating()"
+                    (click)="updateFromEfs(p)">
+              <mat-icon>sync</mat-icon>
+            </button>
+          }
           <button mat-icon-button matTooltip="Einsatzkräfte importieren" (click)="openImportDialog()">
             <mat-icon>upload_file</mat-icon>
           </button>

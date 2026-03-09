@@ -19,6 +19,9 @@ import { DatePipe } from '@angular/common';
 import { DragDropModule, CdkDragDrop, CdkDragStart } from '@angular/cdk/drag-drop';
 import { PlanungStoreService } from '../../services/planung-store.service';
 import { SaveLoadService } from '../../services/save-load.service';
+import { AppModeService } from '../../services/app-mode.service';
+import { EfsApiService } from '../../services/efs-api.service';
+import { ImportService } from '../../services/import.service';
 import {
   Einsatzkraft,
   Fahrzeug,
@@ -82,8 +85,12 @@ export class PlanningEditor {
   private readonly router = inject(Router);
   private readonly saveLoad = inject(SaveLoadService);
   private readonly dialog = inject(MatDialog);
+  readonly appMode = inject(AppModeService);
+  private readonly efsApi = inject(EfsApiService);
+  private readonly importService = inject(ImportService);
 
   readonly planung = this.store.active;
+  readonly efsUpdating = signal(false);
 
   /** Selected items for inspector pane — Posten takes priority over Position */
   selectedPosten: Posten | null = null;
@@ -209,6 +216,24 @@ export class PlanningEditor {
 
   openImportDialog(): void {
     this.dialog.open(ImportDialog, { width: '560px' });
+  }
+
+  async updateFromEfs(p: Planung): Promise<void> {
+    if (!p.hiorg_einsatz_id) return;
+    this.efsUpdating.set(true);
+    try {
+      const detail = await this.efsApi.getVeranstaltungDetail(p.hiorg_einsatz_id);
+      if (!detail) {
+        window.alert('EFS-Aktualisierung fehlgeschlagen. Bitte API-Key prüfen.');
+        return;
+      }
+      const mapped = detail.einsatzkraefte.map((ek) => this.importService.mapEfsEinsatzkraft(ek));
+      this.store.mergeEfsEinsatzkraefte(mapped);
+    } catch {
+      window.alert('Fehler beim Laden der Einsatzkräfte aus der EFS-API.');
+    } finally {
+      this.efsUpdating.set(false);
+    }
   }
 
   goBack(): void {
