@@ -2,11 +2,17 @@ import { Injectable } from '@angular/core';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import type { Content, ContentText, TDocumentDefinitions } from 'pdfmake/interfaces';
-import { Planung, Posten, Taktisch, Medizinisch, TAKTISCH_ORDER, MEDIZINISCH_ORDER } from '../models/planung.model';
+import { Planung, Posten, Taktisch, Medizinisch, TAKTISCH_ORDER } from '../models/planung.model';
 import { formatTaktischeZeit, formatTaktischeZeitDisplay } from '../utils/taktische-zeit';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (pdfMake as any).vfs = (pdfFonts as any).vfs;
+
+const CI_NAVY = '#000548';
+const CI_BLUE = '#4A6FB8';
+const CI_RED = '#EB003C';
+const CI_LIGHT_GRAY = '#C7CCD9';
+const CI_ROW_ALT = '#F5F6FA';
 
 @Injectable({ providedIn: 'root' })
 export class PdfExportService {
@@ -28,16 +34,44 @@ export class PdfExportService {
       : start;
 
     const content: Content[] = [
-      { text: planung.name, style: 'planungName' },
+      // CI-Navy header bar
+      {
+        table: {
+          widths: ['*'],
+          body: [[
+            {
+              text: planung.name,
+              color: '#FFFFFF',
+              bold: true,
+              fontSize: 18,
+              fillColor: CI_NAVY,
+              margin: [8, 8, 8, 8],
+            },
+          ]],
+        },
+        layout: 'noBorders',
+        margin: [0, 0, 0, 4],
+      } as Content,
       { text: dateRangeText, style: 'dateRange', margin: [0, 0, 0, 4] },
     ];
 
     if (planung.einsatzleiter) {
       content.push({
-        text: `Einsatzleiter: ${planung.einsatzleiter.name}`,
-        style: 'einsatzleiter',
+        table: {
+          widths: [4, '*'],
+          body: [[
+            { text: '', fillColor: CI_RED, border: [false, false, false, false] },
+            {
+              text: `Einsatzleiter: ${planung.einsatzleiter.name}`,
+              style: 'einsatzleiter',
+              border: [false, false, false, false],
+              margin: [6, 2, 0, 2],
+            },
+          ]],
+        },
+        layout: 'noBorders',
         margin: [0, 0, 0, 12],
-      });
+      } as Content);
     } else {
       content.push({ text: '', margin: [0, 0, 0, 12] });
     }
@@ -73,13 +107,11 @@ export class PdfExportService {
       }),
       content,
       styles: {
-        planungName: { fontSize: 20, bold: true, margin: [0, 0, 0, 4] },
         dateRange: { fontSize: 11, color: '#444444' },
         einsatzleiter: { fontSize: 11, italics: true },
         beschreibung: { fontSize: 11, color: '#333333' },
         taktischeZeit: { fontSize: 12, bold: true, color: '#000000' },
-        postenHeader: { fontSize: 13, bold: true, margin: [0, 12, 0, 4] },
-        tableHeader: { bold: true, fontSize: 9, fillColor: '#E8E8E8' },
+        tableHeader: { bold: true, fontSize: 9, color: '#FFFFFF', fillColor: CI_BLUE },
       },
       defaultStyle: { fontSize: 10 },
     };
@@ -89,9 +121,48 @@ export class PdfExportService {
   }
 
   private buildPostenBlock(posten: Posten, planung: Planung): Content[] {
-    const heading = posten.fahrzeug
-      ? `${posten.label} · ${posten.fahrzeug.funkruf}`
-      : posten.label;
+    // CI-Navy Posten header
+    const headerCells: Content[] = posten.fahrzeug
+      ? [
+          {
+            text: posten.label,
+            color: '#FFFFFF',
+            bold: true,
+            fontSize: 12,
+            fillColor: CI_NAVY,
+            margin: [6, 4, 4, 4],
+            border: [false, false, false, false],
+          } as Content,
+          {
+            text: posten.fahrzeug.funkruf,
+            color: CI_LIGHT_GRAY,
+            bold: false,
+            fontSize: 12,
+            fillColor: CI_NAVY,
+            margin: [0, 4, 6, 4],
+            border: [false, false, false, false],
+          } as Content,
+        ]
+      : [
+          {
+            text: posten.label,
+            color: '#FFFFFF',
+            bold: true,
+            fontSize: 12,
+            fillColor: CI_NAVY,
+            margin: [6, 4, 6, 4],
+            border: [false, false, false, false],
+          } as Content,
+        ];
+
+    const postenHeader: Content = {
+      table: {
+        widths: posten.fahrzeug ? ['*', 'auto'] : ['*'],
+        body: [headerCells],
+      },
+      layout: 'noBorders',
+      margin: [0, 12, 0, 4],
+    } as Content;
 
     const tableBody: Content[][] = [
       [
@@ -103,36 +174,38 @@ export class PdfExportService {
       ],
     ];
 
-    for (const pos of posten.positions) {
+    posten.positions.forEach((pos, idx) => {
       const person = pos.assigned
         ? planung.einsatzkraefte.find((e) => e.id === pos.assigned!.id) ?? null
         : null;
+
+      const rowFill = idx % 2 === 0 ? '#FFFFFF' : CI_ROW_ALT;
 
       const tStyle = this.taktischStyle(pos.requirements.taktisch);
       const mStyle = this.medizinischStyle(pos.requirements.medizinisch);
 
       const tCell: ContentText = pos.requirements.taktisch
         ? { text: pos.requirements.taktisch, fillColor: tStyle.fillColor, color: tStyle.color, alignment: 'center' }
-        : { text: '–', color: '#AAAAAA', alignment: 'center' };
+        : { text: '–', color: '#AAAAAA', alignment: 'center', fillColor: rowFill };
 
       const mCell: ContentText = pos.requirements.medizinisch
         ? { text: pos.requirements.medizinisch, fillColor: mStyle.fillColor, color: mStyle.color, alignment: 'center' }
-        : { text: '–', color: '#AAAAAA', alignment: 'center' };
+        : { text: '–', color: '#AAAAAA', alignment: 'center', fillColor: rowFill };
 
       const zusatzText = pos.requirements.zusatz ?? (person?.tags.zusatz?.join(', ') ?? '–');
       const assignedName = pos.assigned ? pos.assigned.name : '—';
 
       tableBody.push([
-        { text: pos.label },
+        { text: pos.label, fillColor: rowFill },
         tCell,
         mCell,
-        { text: zusatzText || '–' },
-        { text: assignedName },
+        { text: zusatzText || '–', fillColor: rowFill },
+        { text: assignedName, fillColor: rowFill },
       ]);
-    }
+    });
 
     return [
-      { text: heading, style: 'postenHeader' },
+      postenHeader,
       {
         table: {
           headerRows: 1,
@@ -161,19 +234,32 @@ export class PdfExportService {
   private taktischStyle(tag: Taktisch | null): { fillColor: string; color: string } {
     if (!tag) return { fillColor: '#FFFFFF', color: '#000000' };
     const i = TAKTISCH_ORDER.indexOf(tag);
-    if (i <= 1) return { fillColor: '#C7CCD9', color: '#000548' };
-    if (i === 2) return { fillColor: '#4A6FB8', color: '#FFFFFF' };
-    if (i <= 4) return { fillColor: '#EB003C', color: '#FFFFFF' };
-    return { fillColor: '#FFFFFF', color: '#000548' };
+    if (i <= 1) return { fillColor: CI_LIGHT_GRAY, color: CI_NAVY };
+    if (i === 2) return { fillColor: CI_BLUE, color: '#FFFFFF' };
+    if (i <= 4) return { fillColor: CI_RED, color: '#FFFFFF' };
+    return { fillColor: '#FFFFFF', color: CI_NAVY };
   }
 
   private medizinischStyle(tag: Medizinisch | null): { fillColor: string; color: string } {
     if (!tag) return { fillColor: '#FFFFFF', color: '#000000' };
-    const i = MEDIZINISCH_ORDER.indexOf(tag);
-    if (i <= 2) return { fillColor: '#C7CCD9', color: '#000548' };
-    if (i === 3) return { fillColor: '#2F8F68', color: '#FFFFFF' };
-    if (i === 4) return { fillColor: '#DEE100', color: '#000548' };
-    if (i <= 6) return { fillColor: '#EB003C', color: '#FFFFFF' };
-    return { fillColor: '#4A6FB8', color: '#FFFFFF' };
+    // Tag-based mapping per spec.md
+    switch (tag) {
+      case 'EH':
+      case 'SSD':
+      case 'SanH':
+        return { fillColor: CI_LIGHT_GRAY, color: CI_NAVY };
+      case 'RH':
+        return { fillColor: '#2F8F68', color: '#FFFFFF' };
+      case 'RS':
+        return { fillColor: '#DEE100', color: CI_NAVY };
+      case 'RA':
+      case 'NotSan':
+        return { fillColor: CI_RED, color: '#FFFFFF' };
+      case 'A':
+      case 'NA':
+        return { fillColor: CI_BLUE, color: '#FFFFFF' };
+      default:
+        return { fillColor: '#E0E0E0', color: '#333333' };
+    }
   }
 }
