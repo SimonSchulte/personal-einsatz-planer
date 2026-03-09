@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,6 +11,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -76,6 +77,7 @@ interface Staerke {
     MatInputModule,
     DatePipe,
     DragDropModule,
+    MatMenuModule,
   ],
   templateUrl: './planning-editor.html',
   styleUrl: './planning-editor.less',
@@ -113,13 +115,10 @@ export class PlanningEditor {
     EH: 'Ersthelfer',
     SSD: 'Schulsanitätsdienst',
     SanH: 'Sanitätshelfer',
-    SAN: 'Sanitäter',
-    FR: 'First Responder',
+    RH: 'Rettungshelfer',
     RS: 'Rettungssanitäter',
     RA: 'Rettungsassistent',
     NotSan: 'Notfallsanitäter',
-    RH: 'Rettungshelfer',
-    RDH: 'Rettungsdiensthelfer',
     A: 'Arzt',
     NA: 'Notarzt',
   };
@@ -162,6 +161,27 @@ export class PlanningEditor {
 
   fahrzeugDisplayFn(_: Fahrzeug | null): string {
     return '';
+  }
+
+  readonly contextMenuEk = signal<Einsatzkraft | null>(null);
+  readonly contextMenuPos = signal({ x: 0, y: 0 });
+  @ViewChild('contextMenuTrigger') contextMenuTrigger!: MatMenuTrigger;
+
+  onContextMenu(event: MouseEvent, ek: Einsatzkraft): void {
+    event.preventDefault();
+    this.contextMenuEk.set(ek);
+    this.contextMenuPos.set({ x: event.clientX, y: event.clientY });
+    this.contextMenuTrigger.openMenu();
+  }
+
+  assignFromContextMenu(postenId: string, positionId: string): void {
+    const ek = this.contextMenuEk();
+    if (!ek) return;
+    this.store.assignToPosition(postenId, positionId, ek.id);
+  }
+
+  freePositions(posten: Posten): Position[] {
+    return posten.positions.filter((p) => !p.assigned);
   }
 
   readonly draggingEinsatzkraft = signal<Einsatzkraft | null>(null);
@@ -305,11 +325,11 @@ export class PlanningEditor {
 
   medizinischColor(tag: Medizinisch): { bg: string; fg: string } {
     const i = MEDIZINISCH_ORDER.indexOf(tag);
-    if (i <= 3) return { bg: '#C7CCD9', fg: '#000548' };
-    if (i <= 5) return { bg: '#DEE100', fg: '#000548' };
-    if (i <= 7) return { bg: '#EB003C', fg: '#FFFFFF' };
-    if (i <= 9) return { bg: '#2F8F68', fg: '#FFFFFF' };
-    return { bg: '#4A6FB8', fg: '#FFFFFF' };
+    if (i <= 2) return { bg: '#C7CCD9', fg: '#000548' }; // EH, SSD, SanH
+    if (i === 3) return { bg: '#2F8F68', fg: '#FFFFFF' }; // RH
+    if (i === 4) return { bg: '#DEE100', fg: '#000548' }; // RS
+    if (i <= 6) return { bg: '#EB003C', fg: '#FFFFFF' }; // RA, NotSan
+    return { bg: '#4A6FB8', fg: '#FFFFFF' }; // A, NA
   }
 
   positionMatchClass(position: Position, einsatzkraft?: Einsatzkraft | null): string {

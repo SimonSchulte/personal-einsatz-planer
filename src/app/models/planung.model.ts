@@ -1,6 +1,6 @@
 export const TAKTISCH_ORDER = ['H', 'KSH', 'GF', 'ZF', 'GdSA', 'VF'] as const;
 export const MEDIZINISCH_ORDER = [
-  'EH', 'SSD', 'SanH', 'SAN', 'FR', 'RS', 'RA', 'NotSan', 'RH', 'RDH', 'A', 'NA',
+  'EH', 'SSD', 'SanH', 'RH', 'RS', 'RA', 'NotSan', 'A', 'NA',
 ] as const;
 
 export type Taktisch = (typeof TAKTISCH_ORDER)[number];

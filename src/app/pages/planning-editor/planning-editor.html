@@ -1,5 +1,39 @@
 @if (planung(); as p) {
   <div class="editor-shell">
+    <!-- Invisible context menu trigger positioned at cursor -->
+    <div
+      [style.left.px]="contextMenuPos().x"
+      [style.top.px]="contextMenuPos().y"
+      style="position:fixed;visibility:hidden;pointer-events:none"
+      [matMenuTriggerFor]="ekContextMenu"
+      #contextMenuTrigger="matMenuTrigger">
+    </div>
+
+    <mat-menu #ekContextMenu class="ek-context-menu">
+      @for (posten of planung()?.posten ?? []; track posten.id) {
+        @let freePos = freePositions(posten);
+        @if (freePos.length > 0) {
+          <div class="context-menu-group-header">{{ posten.label }}</div>
+          @for (pos of freePos; track pos.id) {
+            <button mat-menu-item (click)="assignFromContextMenu(posten.id, pos.id)">
+              <span class="ctx-pos-label">{{ pos.label }}</span>
+              <span class="ctx-chips">
+                @if (pos.requirements.taktisch) {
+                  <span class="tag-chip tag-chip--sm"
+                    [style.background]="taktischColor(pos.requirements.taktisch).bg"
+                    [style.color]="taktischColor(pos.requirements.taktisch).fg">{{ pos.requirements.taktisch }}</span>
+                }
+                @if (pos.requirements.medizinisch) {
+                  <span class="tag-chip tag-chip--sm"
+                    [style.background]="medizinischColor(pos.requirements.medizinisch).bg"
+                    [style.color]="medizinischColor(pos.requirements.medizinisch).fg">{{ pos.requirements.medizinisch }}</span>
+                }
+              </span>
+            </button>
+          }
+        }
+      }
+    </mat-menu>
     <!-- Top Bar -->
     <mat-toolbar color="primary" class="editor-toolbar">
       <button mat-icon-button (click)="goBack()" matTooltip="Zurück zur Übersicht">
@@ -68,7 +102,8 @@
                  cdkDrag
                  [cdkDragData]="{ einsatzkraftId: person.id, fromPostenId: null, fromPositionId: null }"
                  (cdkDragStarted)="onDragStarted($event)"
-                 (cdkDragEnded)="onDragEnded()">
+                 (cdkDragEnded)="onDragEnded()"
+                 (contextmenu)="onContextMenu($event, person)">
               <span class="ek-name">{{ person.name }}</span>
               <div class="ek-chips">
                 @for (tag of person.tags.taktisch ?? []; track tag) {
