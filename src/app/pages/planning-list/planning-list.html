@@ -2,14 +2,8 @@
   <mat-icon>assignment</mat-icon>
   <span style="margin-left: 8px">Personaleinsatzplanung</span>
   <span class="spacer"></span>
-  @if (appMode.mode() === 'connected-to-efs-api') {
-    <span class="mode-badge connected">
-      <mat-icon>cloud_done</mat-icon>
-      EFS verbunden
-    </span>
-  }
-  <button mat-icon-button matTooltip="EFS-API Verbindung konfigurieren" (click)="openApiKeyDialog()" style="margin-left: 8px">
-    <mat-icon>{{ appMode.mode() === 'connected-to-efs-api' ? 'cloud' : 'cloud_off' }}</mat-icon>
+  <button mat-icon-button [matTooltip]="appMode.mode() === 'connected-to-efs-api' ? 'HiOrg-Server verbunden' : 'HiOrg-Server konfigurieren'" (click)="openApiKeyDialog()" style="margin-left: 8px">
+    <mat-icon>{{ appMode.mode() === 'connected-to-efs-api' ? 'cloud_done' : 'cloud_off' }}</mat-icon>
   </button>
   <button mat-stroked-button (click)="loadFromFile()" style="margin-right: 8px; margin-left: 8px">
     <mat-icon>folder_open</mat-icon>
@@ -25,7 +19,7 @@
 
   @if (appMode.mode() === 'connected-to-efs-api') {
     <div class="section-header">
-      <h2>Veranstaltungen (EFS-API)</h2>
+      <h2>Veranstaltungen (HiOrg-Server)</h2>
       <button mat-icon-button matTooltip="Aktualisieren" (click)="loadEfsEinsaetze()" [disabled]="efsLoading()">
         <mat-icon>refresh</mat-icon>
       </button>
