@@ -275,6 +275,12 @@ export class PlanningEditor {
     this.router.navigate(['/']);
   }
 
+  updateBeschreibung(value: string): void {
+    const p = this.planung();
+    if (!p) return;
+    this.store.updateActive({ ...p, beschreibung: value || null });
+  }
+
   setEinsatzleiter(id: string | null): void {
     const p = this.planung();
     if (!p) return;

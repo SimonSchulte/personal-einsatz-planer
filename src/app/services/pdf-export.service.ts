@@ -3,6 +3,7 @@ import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import type { Content, ContentText, TDocumentDefinitions } from 'pdfmake/interfaces';
 import { Planung, Posten, Taktisch, Medizinisch, TAKTISCH_ORDER, MEDIZINISCH_ORDER } from '../models/planung.model';
+import { formatTaktischeZeit, formatTaktischeZeitDisplay } from '../utils/taktische-zeit';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (pdfMake as any).vfs = (pdfFonts as any).vfs;
@@ -18,13 +19,17 @@ export class PdfExportService {
       minute: '2-digit',
       timeZone: 'Europe/Berlin',
     });
-    const now = fmt.format(new Date());
+    const nowDate = new Date();
+    const now = formatTaktischeZeit(nowDate);
+    const nowDisplay = formatTaktischeZeitDisplay(nowDate);
     const start = fmt.format(this.parseDate(planung.start));
-    const end = fmt.format(this.parseDate(planung.end));
+    const dateRangeText = planung.end
+      ? `${start} – ${fmt.format(this.parseDate(planung.end))}`
+      : start;
 
     const content: Content[] = [
       { text: planung.name, style: 'planungName' },
-      { text: `${start} – ${end}`, style: 'dateRange', margin: [0, 0, 0, 4] },
+      { text: dateRangeText, style: 'dateRange', margin: [0, 0, 0, 4] },
     ];
 
     if (planung.einsatzleiter) {
@@ -37,6 +42,20 @@ export class PdfExportService {
       content.push({ text: '', margin: [0, 0, 0, 12] });
     }
 
+    if (planung.beschreibung) {
+      content.push({
+        text: planung.beschreibung,
+        style: 'beschreibung',
+        margin: [0, 0, 0, 8],
+      });
+    }
+
+    content.push({
+      text: `Taktische Zeit: ${now}  (${nowDisplay})`,
+      style: 'taktischeZeit',
+      margin: [0, 0, 0, 12],
+    });
+
     for (const posten of planung.posten) {
       content.push(...this.buildPostenBlock(posten, planung));
     }
@@ -46,7 +65,7 @@ export class PdfExportService {
       pageMargins: [40, 60, 40, 50],
       header: () => ({ text: '', margin: [40, 20] }),
       footer: (_page: number, _pages: number) => ({
-        text: `Exportiert am: ${now}`,
+        text: `Exportiert am: ${now}  (${nowDisplay})`,
         alignment: 'right',
         fontSize: 8,
         color: '#666666',
@@ -57,13 +76,15 @@ export class PdfExportService {
         planungName: { fontSize: 20, bold: true, margin: [0, 0, 0, 4] },
         dateRange: { fontSize: 11, color: '#444444' },
         einsatzleiter: { fontSize: 11, italics: true },
+        beschreibung: { fontSize: 11, color: '#333333' },
+        taktischeZeit: { fontSize: 12, bold: true, color: '#000000' },
         postenHeader: { fontSize: 13, bold: true, margin: [0, 12, 0, 4] },
         tableHeader: { bold: true, fontSize: 9, fillColor: '#E8E8E8' },
       },
       defaultStyle: { fontSize: 10 },
     };
 
-    const filename = `${planung.name}.pep.pdf`;
+    const filename = `${planung.name}_${now}.pep.pdf`;
     pdfMake.createPdf(docDef).download(filename);
   }
 
