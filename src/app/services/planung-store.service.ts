@@ -1,11 +1,10 @@
 import { Injectable, signal } from '@angular/core';
 import { Einsatzkraft, EfsEinsatz, FahrzeugRef, Planung, Posten } from '../models/planung.model';
-import { EXAMPLE_PLANUNG } from '../data/example-planung';
 
 @Injectable({ providedIn: 'root' })
 export class PlanungStoreService {
   /** List of all planungen (in-memory; later: persisted) */
-  private readonly _planungen = signal<Planung[]>([EXAMPLE_PLANUNG]);
+  private readonly _planungen = signal<Planung[]>([]);
 
   /** The currently open Planung, or null */
   private readonly _active = signal<Planung | null>(null);

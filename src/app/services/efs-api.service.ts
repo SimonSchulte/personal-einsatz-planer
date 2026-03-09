@@ -34,6 +34,7 @@ interface EfsApiEinsatz {
   datum_bis?: string;
   beginn?: string | number;
   end?: string | number;
+  zeitpunkt?: string | number;
   ort?: string;
 }
 
@@ -119,13 +120,13 @@ export class EfsApiService {
   }
 
   private mapEinsatz(e: EfsApiEinsatz): EfsEinsatz {
-    const toDateStr = (v?: string | number) =>
-      v == null ? '' : typeof v === 'number' ? new Date(v * 1000).toISOString() : v;
+    const toDateStr = (v?: string | number): string | null =>
+      v == null ? null : typeof v === 'number' ? new Date(v * 1000).toISOString() : v || null;
     return {
       id: String(e.id),
       titel: e.titel ?? e.stichwort ?? '',
-      datum_von: e.datum_von ?? toDateStr(e.beginn),
-      datum_bis: e.datum_bis ?? toDateStr(e.end),
+      datum_von: toDateStr(e.datum_von) ?? toDateStr(e.beginn) ?? toDateStr(e.zeitpunkt) ?? '',
+      datum_bis: toDateStr(e.datum_bis) ?? toDateStr(e.end) ?? '',
       ort: e.ort,
     };
   }
