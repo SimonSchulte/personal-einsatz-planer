@@ -1,4 +1,4 @@
-import { Component, inject, signal, ViewChild } from '@angular/core';
+import { Component, computed, inject, signal, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,7 +16,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { DatePipe } from '@angular/common';
 import { DragDropModule, CdkDragDrop, CdkDragStart } from '@angular/cdk/drag-drop';
 import { PlanungStoreService } from '../../services/planung-store.service';
 import { SaveLoadService } from '../../services/save-load.service';
@@ -76,7 +75,6 @@ interface Staerke {
     MatAutocompleteModule,
     MatFormFieldModule,
     MatInputModule,
-    DatePipe,
     DragDropModule,
     MatMenuModule,
   ],
@@ -94,6 +92,7 @@ export class PlanningEditor {
   private readonly pdfExport = inject(PdfExportService);
 
   readonly planung = this.store.active;
+  readonly canUndo = this.store.canUndo;
   readonly efsUpdating = signal(false);
 
   /** Selected items for inspector pane — Posten takes priority over Position */
@@ -124,6 +123,9 @@ export class PlanningEditor {
     A: 'Arzt',
     NA: 'Notarzt',
   };
+
+  readonly TAKTISCH_OPTIONS: (Taktisch | null)[] = [null, ...TAKTISCH_ORDER];
+  readonly MEDIZINISCH_OPTIONS: (Medizinisch | null)[] = [null, ...MEDIZINISCH_ORDER];
 
   readonly fahrzeugFilter = signal<Record<string, string>>({});
 
@@ -188,6 +190,24 @@ export class PlanningEditor {
 
   readonly draggingEinsatzkraft = signal<Einsatzkraft | null>(null);
   readonly assignedListCollapsed = signal(true);
+  readonly rosterSearch = signal('');
+  readonly rosterTagFilter = signal<string | null>(null);
+  readonly filteredRoster = computed(() => {
+    const p = this.planung();
+    if (!p) return [];
+    const base = this.unassignedRoster(p);
+    const q = this.rosterSearch().toLowerCase();
+    const tag = this.rosterTagFilter();
+    return base.filter((e) => {
+      const matchesName = !q || e.name.toLowerCase().includes(q);
+      const matchesTag =
+        !tag ||
+        (e.tags.taktisch ?? []).includes(tag as Taktisch) ||
+        (e.tags.medizinisch ?? []).includes(tag as Medizinisch) ||
+        (e.tags.zusatz ?? []).includes(tag);
+      return matchesName && matchesTag;
+    });
+  });
 
   onDragStarted(event: CdkDragStart<DragData>): void {
     const id = event.source.data.einsatzkraftId;
@@ -439,5 +459,77 @@ export class PlanningEditor {
       planung.posten.flatMap((p) => p.positions.map((pos) => pos.assigned?.id)).filter(Boolean),
     );
     return planung.einsatzkraefte.filter((e) => !assignedIds.has(e.id));
+  }
+
+  updateName(value: string): void {
+    const p = this.planung();
+    if (!p) return;
+    this.store.updateActive({ ...p, name: value });
+  }
+
+  updateStart(value: string): void {
+    const p = this.planung();
+    if (!p) return;
+    const iso = value ? new Date(value).toISOString() : p.start;
+    this.store.updateActive({ ...p, start: iso });
+  }
+
+  updateEnd(value: string): void {
+    const p = this.planung();
+    if (!p) return;
+    const iso = value ? new Date(value).toISOString() : p.end;
+    this.store.updateActive({ ...p, end: iso });
+  }
+
+  toDatetimeLocal(iso: string): string {
+    return iso ? iso.slice(0, 16) : '';
+  }
+
+  addPosition(postenId: string): void {
+    this.store.addPosition(postenId);
+  }
+
+  updatePostenLabel(postenId: string, label: string): void {
+    this.store.updatePostenLabel(postenId, label);
+  }
+
+  updatePositionLabel(value: string): void {
+    if (!this.selectedPosition) return;
+    const updated = { ...this.selectedPosition.position, label: value };
+    this.store.updatePosition(this.selectedPosition.posten.id, updated);
+    this.selectedPosition = { ...this.selectedPosition, position: updated };
+  }
+
+  updatePositionTaktisch(value: Taktisch | null): void {
+    if (!this.selectedPosition) return;
+    const updated = {
+      ...this.selectedPosition.position,
+      requirements: { ...this.selectedPosition.position.requirements, taktisch: value },
+    };
+    this.store.updatePosition(this.selectedPosition.posten.id, updated);
+    this.selectedPosition = { ...this.selectedPosition, position: updated };
+  }
+
+  updatePositionMedizinisch(value: Medizinisch | null): void {
+    if (!this.selectedPosition) return;
+    const updated = {
+      ...this.selectedPosition.position,
+      requirements: { ...this.selectedPosition.position.requirements, medizinisch: value },
+    };
+    this.store.updatePosition(this.selectedPosition.posten.id, updated);
+    this.selectedPosition = { ...this.selectedPosition, position: updated };
+  }
+
+  undo(): void {
+    this.store.undo();
+    const p = this.store.active();
+    if (this.selectedPosition && p) {
+      const posten = p.posten.find((po) => po.id === this.selectedPosition!.posten.id);
+      const position = posten?.positions.find((pos) => pos.id === this.selectedPosition!.position.id);
+      this.selectedPosition = posten && position ? { posten, position } : null;
+    }
+    if (this.selectedPosten && p) {
+      this.selectedPosten = p.posten.find((po) => po.id === this.selectedPosten!.id) ?? null;
+    }
   }
 }

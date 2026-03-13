@@ -1,5 +1,5 @@
-import { Injectable, signal } from '@angular/core';
-import { Einsatzkraft, EfsEinsatz, FahrzeugRef, Planung, Posten } from '../models/planung.model';
+import { Injectable, computed, signal } from '@angular/core';
+import { Einsatzkraft, EfsEinsatz, FahrzeugRef, Planung, Posten, Position } from '../models/planung.model';
 
 @Injectable({ providedIn: 'root' })
 export class PlanungStoreService {
@@ -9,15 +9,20 @@ export class PlanungStoreService {
   /** The currently open Planung, or null */
   private readonly _active = signal<Planung | null>(null);
 
+  private readonly _undoStack = signal<Planung[]>([]);
+  readonly canUndo = computed(() => this._undoStack().length > 0);
+
   readonly planungen = this._planungen.asReadonly();
   readonly active = this._active.asReadonly();
 
   openPlanung(id: string): void {
     const found = this._planungen().find((p) => p.id === id) ?? null;
+    this._undoStack.set([]);
     this._active.set(found);
   }
 
   closePlanung(): void {
+    this._undoStack.set([]);
     this._active.set(null);
   }
 
@@ -38,8 +43,21 @@ export class PlanungStoreService {
   }
 
   updateActive(planung: Planung): void {
+    const prev = this._active();
+    if (prev) {
+      this._undoStack.update((s) => [...s.slice(-49), prev]);
+    }
     this._active.set(planung);
     this._planungen.update((list) => list.map((p) => (p.id === planung.id ? planung : p)));
+  }
+
+  undo(): void {
+    const stack = this._undoStack();
+    if (stack.length === 0) return;
+    const prev = stack[stack.length - 1];
+    this._undoStack.update((s) => s.slice(0, -1));
+    this._active.set(prev);
+    this._planungen.update((list) => list.map((p) => (p.id === prev.id ? prev : p)));
   }
 
   addPosten(): void {
@@ -240,6 +258,56 @@ export class PlanungStoreService {
               ),
             }
           : p,
+      ),
+    });
+  }
+
+  addPosition(postenId: string): void {
+    const active = this._active();
+    if (!active) return;
+    const newPosition: Position = {
+      id: crypto.randomUUID(),
+      label: 'Neue Position',
+      requirements: { taktisch: null, medizinisch: null },
+      assigned: null,
+    };
+    this.updateActive({
+      ...active,
+      posten: active.posten.map((p) =>
+        p.id === postenId ? { ...p, positions: [...p.positions, newPosition] } : p,
+      ),
+    });
+  }
+
+  updatePostenLabel(postenId: string, label: string): void {
+    const active = this._active();
+    if (!active) return;
+    this.updateActive({
+      ...active,
+      posten: active.posten.map((p) => (p.id === postenId ? { ...p, label } : p)),
+    });
+  }
+
+  updatePosition(postenId: string, position: Position): void {
+    const active = this._active();
+    if (!active) return;
+    this.updateActive({
+      ...active,
+      posten: active.posten.map((p) =>
+        p.id === postenId
+          ? { ...p, positions: p.positions.map((pos) => (pos.id === position.id ? position : pos)) }
+          : p,
+      ),
+    });
+  }
+
+  updateEinsatzkraftNotes(id: string, notes: string): void {
+    const active = this._active();
+    if (!active) return;
+    this.updateActive({
+      ...active,
+      einsatzkraefte: active.einsatzkraefte.map((e) =>
+        e.id === id ? { ...e, meta: { ...e.meta, notes: notes || undefined } } : e,
       ),
     });
   }
