@@ -23,7 +23,7 @@
 
   .einsatzleiter-label {
     font-size: 0.65rem;
-    color: rgba(0, 0, 0, 0.60);
+    color: rgba(255, 255, 255, 0.70);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     line-height: 1;
@@ -32,6 +32,85 @@
   .einsatzleiter-select {
     width: 200px;
     font-size: 0.875rem;
+    color: var(--text-on-dark);
+
+    // Arrow icon color
+    .mat-mdc-select-arrow {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    // Value text color
+    .mat-mdc-select-value-text {
+      color: var(--text-on-dark);
+    }
+  }
+}
+
+/* Toolbar inputs */
+.planung-name-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  color: var(--text-on-dark);
+  font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: 500;
+  padding: 2px 6px;
+  min-width: 160px;
+
+  &:focus-visible {
+    outline: 1px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 1px;
+  }
+}
+
+.time-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  color: var(--text-on-dark);
+  font-size: 0.875rem;
+  font-family: inherit;
+  padding: 2px 4px;
+  color-scheme: dark;
+  width: 80px;
+
+  &:focus-visible {
+    outline: 1px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 1px;
+  }
+}
+
+.date-sep {
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 4px;
+}
+
+/* Compact Material date-field in toolbar */
+.date-field {
+  width: 130px;
+
+  // Override Material M3 token for outlined field colors on dark background
+  --mdc-outlined-text-field-outline-color: rgba(255, 255, 255, 0.4);
+  --mdc-outlined-text-field-hover-outline-color: rgba(255, 255, 255, 0.7);
+  --mdc-outlined-text-field-focus-outline-color: rgba(255, 255, 255, 0.9);
+  --mdc-outlined-text-field-input-text-color: var(--text-on-dark);
+  --mdc-outlined-text-field-label-text-color: rgba(255, 255, 255, 0.7);
+  --mdc-outlined-text-field-focus-label-text-color: rgba(255, 255, 255, 0.9);
+  --mat-form-field-trailing-icon-color: rgba(255, 255, 255, 0.7);
+
+  .mat-mdc-text-field-wrapper {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+
+  input {
+    color: var(--text-on-dark);
+    font-size: 0.8rem;
+  }
+
+  .mat-mdc-form-field-icon-suffix {
+    color: rgba(255, 255, 255, 0.7);
   }
 }
 
@@ -60,7 +139,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 16px;
-  background: #fafafa;
+  background: var(--surface-tertiary);
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   flex-shrink: 0;
 
@@ -68,21 +147,20 @@
     font-size: 18px;
     width: 18px;
     height: 18px;
-    color: rgba(0, 0, 0, 0.38);
+    color: var(--text-disabled);
     flex-shrink: 0;
   }
 
   .subbar-input {
     flex: 1;
     border: none;
-    outline: none;
     background: transparent;
     font-size: 0.875rem;
-    color: rgba(0, 0, 0, 0.87);
+    color: var(--text-primary);
     font-family: inherit;
 
     &::placeholder {
-      color: rgba(0, 0, 0, 0.38);
+      color: var(--text-disabled);
     }
   }
 }
@@ -116,7 +194,7 @@
 }
 
 .pane-inspector {
-  width: 260px;
+  width: 280px;
   flex-shrink: 0;
   transition: width 0.2s ease;
 
@@ -209,9 +287,14 @@
 }
 
 .staerke-row.ist {
-  .status-under { color: #c62828; font-weight: 700; }
-  .status-over  { color: #e65100; font-weight: 700; }
-  .status-met   { color: #2e7d32; font-weight: 700; }
+  .status-under   { color: var(--status-under);   font-weight: 700; }
+  .status-over    { color: var(--status-over);    font-weight: 700; }
+  .status-met     { color: var(--status-match);   font-weight: 700; }
+  .status-neutral { color: var(--status-neutral); font-weight: 700; }
+}
+
+.gesamt-num {
+  text-decoration: underline;
 }
 
 .collapse-btn {
@@ -267,12 +350,12 @@
   padding: 8px 10px;
   border-radius: 6px;
   margin-bottom: 4px;
-  background: #fafafa;
+  background: var(--surface-tertiary);
   border: 1px solid rgba(0, 0, 0, 0.08);
 
   &.available {
-    background: #e8f5e9;
-    border-color: #a5d6a7;
+    background: var(--surface-tertiary);
+    border-color: var(--border-light);
   }
 
   .ek-name {
@@ -319,6 +402,35 @@
 /* ---- Posten header title gap ---- */
 .mat-expansion-panel-header .mat-panel-title {
   gap: 16px;
+}
+
+/* ---- Posten Label Input ---- */
+.posten-label-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border-radius: 4px 4px 0 0;
+  min-width: 80px;
+  max-width: 220px;
+  transition: border-color 0.15s, background 0.15s;
+  cursor: text;
+
+  &:hover {
+    border-bottom-color: rgba(0, 0, 0, 0.42);
+  }
+
+  &:focus {
+    outline: none;
+    border-bottom: 2px solid var(--ci-blue);
+    background: rgba(0, 0, 0, 0.04);
+    padding-bottom: 1px; // compensate for border-width change
+  }
 }
 
 /* ---- Posten Tree ---- */
@@ -372,17 +484,17 @@
   padding: 8px 10px;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #fafafa;
+  background: var(--surface-tertiary);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 
   &:hover {
-    background: #f0f0f0;
+    background: var(--surface-hover);
   }
 
   &.selected {
-    border-color: #1976d2;
-    background: #e3f2fd;
+    border-color: var(--ci-blue);
+    background: color-mix(in srgb, var(--ci-blue) 10%, transparent);
   }
 }
 
@@ -431,10 +543,10 @@
   }
 
   &--danger {
-    color: #c62828;
+    color: var(--status-under);
 
     &:hover {
-      background: rgba(198, 40, 40, 0.08);
+      background: color-mix(in srgb, var(--status-under) 8%, transparent);
     }
   }
 }
@@ -460,23 +572,23 @@
   }
 
   &.match-full {
-    border-left-color: #4caf50;
-    color: #2e7d32;
+    border-left-color: var(--drag-match-full-border);
+    background: var(--drag-match-full-bg);
   }
 
   &.match-partial {
-    border-left-color: #ff9800;
-    color: #e65100;
+    border-left-color: var(--drag-match-partial-border);
+    background: var(--drag-match-partial-bg);
   }
 
   &.match-mismatch {
-    border-left-color: #f44336;
-    color: #c62828;
+    border-left-color: var(--drag-mismatch-border);
+    background: var(--drag-mismatch-bg);
   }
 
   &.match-neutral {
-    border-left-color: #9e9e9e;
-    color: rgba(0, 0, 0, 0.60);
+    border-left-color: var(--status-neutral);
+    color: var(--text-secondary);
   }
 }
 

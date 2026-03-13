@@ -16,6 +16,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
+import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
 import { DragDropModule, CdkDragDrop, CdkDragStart } from '@angular/cdk/drag-drop';
 import { PlanungStoreService } from '../../services/planung-store.service';
 import { SaveLoadService } from '../../services/save-load.service';
@@ -75,9 +77,12 @@ interface Staerke {
     MatAutocompleteModule,
     MatFormFieldModule,
     MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     DragDropModule,
     MatMenuModule,
   ],
+  providers: [{ provide: MAT_DATE_LOCALE, useValue: 'de-DE' }],
   templateUrl: './planning-editor.html',
   styleUrl: './planning-editor.less',
 })
@@ -449,6 +454,7 @@ export class PlanningEditor {
   }
 
   staerkeStatus(ist: number, soll: number): string {
+    if (soll === 0 && ist === 0) return 'status-neutral';
     if (ist < soll) return 'status-under';
     if (ist > soll) return 'status-over';
     return 'status-met';
@@ -483,6 +489,52 @@ export class PlanningEditor {
 
   toDatetimeLocal(iso: string): string {
     return iso ? iso.slice(0, 16) : '';
+  }
+
+  getDateFromIso(iso: string): Date | null {
+    return iso ? new Date(iso) : null;
+  }
+
+  getTimeFromIso(iso: string): string {
+    if (!iso) return '00:00';
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+
+  private buildIso(existingIso: string, date: Date | null, time: string): string {
+    const base = date ?? (existingIso ? new Date(existingIso) : new Date());
+    const [h, m] = time ? time.split(':').map(Number) : [0, 0];
+    const d = new Date(base);
+    d.setHours(h, m, 0, 0);
+    return d.toISOString();
+  }
+
+  updateStartDate(event: MatDatepickerInputEvent<Date>): void {
+    const p = this.planung();
+    if (!p || !event.value) return;
+    const iso = this.buildIso(p.start, event.value, this.getTimeFromIso(p.start));
+    this.store.updateActive({ ...p, start: iso });
+  }
+
+  updateStartTime(value: string): void {
+    const p = this.planung();
+    if (!p) return;
+    const iso = this.buildIso(p.start, this.getDateFromIso(p.start), value);
+    this.store.updateActive({ ...p, start: iso });
+  }
+
+  updateEndDate(event: MatDatepickerInputEvent<Date>): void {
+    const p = this.planung();
+    if (!p || !event.value) return;
+    const iso = this.buildIso(p.end, event.value, this.getTimeFromIso(p.end));
+    this.store.updateActive({ ...p, end: iso });
+  }
+
+  updateEndTime(value: string): void {
+    const p = this.planung();
+    if (!p) return;
+    const iso = this.buildIso(p.end, this.getDateFromIso(p.end), value);
+    this.store.updateActive({ ...p, end: iso });
   }
 
   addPosition(postenId: string): void {

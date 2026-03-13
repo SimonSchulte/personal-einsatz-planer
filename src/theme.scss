@@ -5,9 +5,13 @@ html {
     color: (
       theme-type: light,
       primary: mat.$violet-palette,
+      secondary: mat.$red-palette,
       tertiary: mat.$red-palette,
     ),
     typography: Roboto,
-    density: 0,
+    density: -1,
   ));
+
+  --mat-sys-secondary: #EB003C;
+  --mat-sys-on-secondary: #FFFFFF;
 }

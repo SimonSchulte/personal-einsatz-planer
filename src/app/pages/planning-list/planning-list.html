@@ -12,7 +12,7 @@
     <mat-icon>folder_open</mat-icon>
     Datei öffnen
   </button>
-  <button mat-raised-button (click)="createNew()" class="toolbar-btn">
+  <button mat-raised-button color="secondary" (click)="createNew()" class="toolbar-btn">
     <mat-icon>add</mat-icon>
     Neue Planung
   </button>
@@ -99,9 +99,9 @@
 
   @if (planungen().length === 0) {
     <div class="empty-state">
-      <mat-icon class="empty-state-icon">folder_open</mat-icon>
+      <mat-icon class="empty-state-icon">groups</mat-icon>
       <p class="empty-hint">Noch keine Planungen vorhanden.</p>
-      <button mat-raised-button color="primary" (click)="createNew()">
+      <button mat-raised-button color="secondary" (click)="createNew()">
         <mat-icon>add</mat-icon> Neue Planung erstellen
       </button>
     </div>
@@ -127,7 +127,7 @@
           }
         </mat-card-content>
         <mat-card-actions>
-          <button mat-button color="primary" (click)="openPlanung(planung.id); $event.stopPropagation()">
+          <button mat-stroked-button color="secondary" (click)="openPlanung(planung.id); $event.stopPropagation()">
             <mat-icon>open_in_new</mat-icon>
             Öffnen
           </button>

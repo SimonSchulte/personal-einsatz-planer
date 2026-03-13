@@ -42,10 +42,24 @@
       <button mat-icon-button (click)="goBack()" matTooltip="Zurück zur Übersicht">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <input class="planung-name-input" [value]="p.name" (blur)="updateName($any($event.target).value)" />
-      <input type="datetime-local" class="date-input" [value]="toDatetimeLocal(p.start)" (blur)="updateStart($any($event.target).value)" />
+      <input class="planung-name-input" [value]="p.name" (blur)="updateName($any($event.target).value)" aria-label="Planungsname" />
+      <mat-form-field class="date-field" appearance="outline" subscriptSizing="dynamic">
+        <input matInput [matDatepicker]="startPicker" [value]="getDateFromIso(p.start)"
+          (dateChange)="updateStartDate($event)" aria-label="Startdatum" placeholder="TT.MM.JJJJ" />
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+      <input type="time" class="time-input" [value]="getTimeFromIso(p.start)"
+        (change)="updateStartTime($any($event.target).value)" aria-label="Startzeit" />
       <span class="date-sep">–</span>
-      <input type="datetime-local" class="date-input" [value]="toDatetimeLocal(p.end)" (blur)="updateEnd($any($event.target).value)" />
+      <mat-form-field class="date-field" appearance="outline" subscriptSizing="dynamic">
+        <input matInput [matDatepicker]="endPicker" [value]="getDateFromIso(p.end)"
+          (dateChange)="updateEndDate($event)" aria-label="Enddatum" placeholder="TT.MM.JJJJ" />
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+      <input type="time" class="time-input" [value]="getTimeFromIso(p.end)"
+        (change)="updateEndTime($any($event.target).value)" aria-label="Endzeit" />
       <div class="einsatzleiter-field">
         <span class="einsatzleiter-label">EinsatzleiterIn</span>
         <mat-select class="einsatzleiter-select" [value]="p.einsatzleiter?.id ?? null" (selectionChange)="setEinsatzleiter($event.value)">
@@ -67,9 +81,8 @@
           <mat-icon>sync</mat-icon>
         </button>
       }
-      <button mat-button (click)="importTemplate()" matTooltip="Posten-Struktur aus .pep.json übernehmen">
+      <button mat-icon-button (click)="importTemplate()" matTooltip="Vorlage importieren">
         <mat-icon>file_upload</mat-icon>
-        Vorlage importieren
       </button>
       <button mat-icon-button matTooltip="Speichern" (click)="save()">
         <mat-icon>save</mat-icon>
@@ -87,6 +100,7 @@
         placeholder="Einsatzort, Lage, Anmerkungen …"
         [value]="planung()?.beschreibung ?? ''"
         (blur)="updateBeschreibung($any($event.target).value)"
+        aria-label="Beschreibung / Lage"
       />
     </div>
 
@@ -114,7 +128,7 @@
              cdkDropListSortingDisabled
              (cdkDropListDropped)="onDropToRoster($event)">
           <div class="roster-search-bar">
-            <input class="roster-search-input" placeholder="Suchen…" [value]="rosterSearch()" (input)="rosterSearch.set($any($event.target).value)" />
+            <input class="roster-search-input" placeholder="Suchen…" [value]="rosterSearch()" (input)="rosterSearch.set($any($event.target).value)" aria-label="Einsatzkräfte suchen" />
           </div>
           @for (person of filteredRoster(); track person.id) {
             <div class="einsatzkraft-card available"
@@ -149,7 +163,14 @@
             </div>
           }
           @if (filteredRoster().length === 0) {
-            <p class="empty-hint">Alle Einsatzkräfte sind eingeteilt.</p>
+            @if (p.einsatzkraefte.length === 0) {
+              <p class="empty-hint">Noch keine Einsatzkräfte vorhanden.</p>
+              <button mat-stroked-button color="secondary" (click)="openImportDialog()" style="margin: 4px 0">
+                <mat-icon>group_add</mat-icon> Roster importieren
+              </button>
+            } @else {
+              <p class="empty-hint">Alle Einsatzkräfte sind eingeteilt.</p>
+            }
           }
 
           <mat-divider style="margin: 12px 0"></mat-divider>
@@ -191,16 +212,6 @@
           <span>Einsatzplan</span>
           <span class="spacer"></span>
           <div class="staerke-block" role="grid" aria-label="Gesamtstärke">
-            <div class="staerke-row ist" role="row">
-              <span class="staerke-label" role="gridcell">Ist</span>
-              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).fuhrer, planungSoll(p).fuhrer)">{{ planungIst(p).fuhrer }}</span>
-              <span class="staerke-sep" role="gridcell">/</span>
-              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).unterfuehrer, planungSoll(p).unterfuehrer)">{{ planungIst(p).unterfuehrer }}</span>
-              <span class="staerke-sep" role="gridcell">/</span>
-              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).helfer, planungSoll(p).helfer)">{{ planungIst(p).helfer }}</span>
-              <span class="staerke-sep" role="gridcell">/</span>
-              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).gesamt, planungSoll(p).gesamt)"><u>{{ planungIst(p).gesamt }}</u></span>
-            </div>
             <div class="staerke-row soll" role="row">
               <span class="staerke-label" role="gridcell">Soll</span>
               <span class="staerke-num" role="gridcell">{{ planungSoll(p).fuhrer }}</span>
@@ -209,7 +220,17 @@
               <span class="staerke-sep" role="gridcell">/</span>
               <span class="staerke-num" role="gridcell">{{ planungSoll(p).helfer }}</span>
               <span class="staerke-sep" role="gridcell">/</span>
-              <span class="staerke-num" role="gridcell"><u>{{ planungSoll(p).gesamt }}</u></span>
+              <span class="staerke-num" role="gridcell"><span class="gesamt-num">{{ planungSoll(p).gesamt }}</span></span>
+            </div>
+            <div class="staerke-row ist" role="row">
+              <span class="staerke-label" role="gridcell">Ist</span>
+              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).fuhrer, planungSoll(p).fuhrer)">{{ planungIst(p).fuhrer }}</span>
+              <span class="staerke-sep" role="gridcell">/</span>
+              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).unterfuehrer, planungSoll(p).unterfuehrer)">{{ planungIst(p).unterfuehrer }}</span>
+              <span class="staerke-sep" role="gridcell">/</span>
+              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).helfer, planungSoll(p).helfer)">{{ planungIst(p).helfer }}</span>
+              <span class="staerke-sep" role="gridcell">/</span>
+              <span class="staerke-num" role="gridcell" [class]="staerkeStatus(planungIst(p).gesamt, planungSoll(p).gesamt)"><span class="gesamt-num">{{ planungIst(p).gesamt }}</span></span>
             </div>
           </div>
         </div>
@@ -231,16 +252,6 @@
                 </mat-panel-title>
                 <mat-panel-description (click)="$event.stopPropagation()">
                   <div class="staerke-block compact description-spacer" role="grid" [attr.aria-label]="'Stärke ' + posten.label">
-                    <div class="staerke-row ist" role="row">
-                      <span class="staerke-label" role="gridcell">Ist</span>
-                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).fuhrer, postenSoll(posten).fuhrer)">{{ postenIst(posten).fuhrer }}</span>
-                      <span class="staerke-sep" role="gridcell">/</span>
-                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).unterfuehrer, postenSoll(posten).unterfuehrer)">{{ postenIst(posten).unterfuehrer }}</span>
-                      <span class="staerke-sep" role="gridcell">/</span>
-                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).helfer, postenSoll(posten).helfer)">{{ postenIst(posten).helfer }}</span>
-                      <span class="staerke-sep" role="gridcell">/</span>
-                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).gesamt, postenSoll(posten).gesamt)"><u>{{ postenIst(posten).gesamt }}</u></span>
-                    </div>
                     <div class="staerke-row soll" role="row">
                       <span class="staerke-label" role="gridcell">Soll</span>
                       <span class="staerke-num" role="gridcell">{{ postenSoll(posten).fuhrer }}</span>
@@ -249,7 +260,17 @@
                       <span class="staerke-sep" role="gridcell">/</span>
                       <span class="staerke-num" role="gridcell">{{ postenSoll(posten).helfer }}</span>
                       <span class="staerke-sep" role="gridcell">/</span>
-                      <span class="staerke-num" role="gridcell"><u>{{ postenSoll(posten).gesamt }}</u></span>
+                      <span class="staerke-num" role="gridcell"><span class="gesamt-num">{{ postenSoll(posten).gesamt }}</span></span>
+                    </div>
+                    <div class="staerke-row ist" role="row">
+                      <span class="staerke-label" role="gridcell">Ist</span>
+                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).fuhrer, postenSoll(posten).fuhrer)">{{ postenIst(posten).fuhrer }}</span>
+                      <span class="staerke-sep" role="gridcell">/</span>
+                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).unterfuehrer, postenSoll(posten).unterfuehrer)">{{ postenIst(posten).unterfuehrer }}</span>
+                      <span class="staerke-sep" role="gridcell">/</span>
+                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).helfer, postenSoll(posten).helfer)">{{ postenIst(posten).helfer }}</span>
+                      <span class="staerke-sep" role="gridcell">/</span>
+                      <span class="staerke-num" role="gridcell" [class]="staerkeStatus(postenIst(posten).gesamt, postenSoll(posten).gesamt)"><span class="gesamt-num">{{ postenIst(posten).gesamt }}</span></span>
                     </div>
                   </div>
                   <button mat-icon-button class="posten-action-btn" matTooltip="Leeren"
@@ -334,7 +355,7 @@
                   </div>
                 }
                 <div class="add-position-row">
-                  <button mat-button (click)="addPosition(posten.id)">
+                  <button mat-stroked-button color="secondary" (click)="addPosition(posten.id)">
                     <mat-icon>add</mat-icon> Neue Position
                   </button>
                 </div>
@@ -343,7 +364,7 @@
           }
         </mat-accordion>
         <div class="add-posten-row">
-          <button mat-stroked-button (click)="addPosten()">
+          <button mat-stroked-button color="secondary" (click)="addPosten()">
             <mat-icon>add</mat-icon> Neuer Posten
           </button>
         </div>
@@ -355,7 +376,7 @@
         <div class="pane-header">
           <button mat-icon-button class="collapse-btn" (click)="toggleInspector()"
             [matTooltip]="inspectorCollapsed() ? 'Inspektor öffnen' : 'Details ausblenden'">
-            <mat-icon>{{ inspectorCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+            <mat-icon>{{ inspectorCollapsed() ? 'chevron_left' : 'chevron_right' }}</mat-icon>
           </button>
           @if (!inspectorCollapsed()) {
             <mat-icon>info</mat-icon>
