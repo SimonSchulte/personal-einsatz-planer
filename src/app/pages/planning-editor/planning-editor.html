@@ -39,11 +39,10 @@
       <button mat-icon-button (click)="goBack()" matTooltip="Zurück zur Übersicht">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <span class="planung-name">{{ p.name }}</span>
-      <span class="date-range">
-        {{ p.start | date: 'dd.MM.yyyy HH:mm' : '' : 'de-DE' }} –
-        {{ p.end | date: 'dd.MM.yyyy HH:mm' : '' : 'de-DE' }}
-      </span>
+      <input class="planung-name-input" [value]="p.name" (blur)="updateName($any($event.target).value)" />
+      <input type="datetime-local" class="date-input" [value]="toDatetimeLocal(p.start)" (blur)="updateStart($any($event.target).value)" />
+      <span class="date-sep">–</span>
+      <input type="datetime-local" class="date-input" [value]="toDatetimeLocal(p.end)" (blur)="updateEnd($any($event.target).value)" />
       <div class="einsatzleiter-field">
         <span class="einsatzleiter-label">EinsatzleiterIn</span>
         <mat-select class="einsatzleiter-select" [value]="p.einsatzleiter?.id ?? null" (selectionChange)="setEinsatzleiter($event.value)">
@@ -53,6 +52,9 @@
           }
         </mat-select>
       </div>
+      <button mat-icon-button matTooltip="Rückgängig" [disabled]="!canUndo()" (click)="undo()">
+        <mat-icon>undo</mat-icon>
+      </button>
       <span class="spacer"></span>
       @if (appMode.mode() === 'connected-to-efs-api' && p.hiorg_einsatz_id) {
         <button mat-icon-button
@@ -108,7 +110,10 @@
              cdkDropList
              cdkDropListSortingDisabled
              (cdkDropListDropped)="onDropToRoster($event)">
-          @for (person of unassignedRoster(p); track person.id) {
+          <div class="roster-search-bar">
+            <input class="roster-search-input" placeholder="Suchen…" [value]="rosterSearch()" (input)="rosterSearch.set($any($event.target).value)" />
+          </div>
+          @for (person of filteredRoster(); track person.id) {
             <div class="einsatzkraft-card available"
                  cdkDrag
                  [cdkDragData]="{ einsatzkraftId: person.id, fromPostenId: null, fromPositionId: null }"
@@ -140,7 +145,7 @@
               </div>
             </div>
           }
-          @if (unassignedRoster(p).length === 0) {
+          @if (filteredRoster().length === 0) {
             <p class="empty-hint">Alle Einsatzkräfte sind eingeteilt.</p>
           }
 
@@ -210,8 +215,13 @@
           @for (posten of p.posten; track posten.id) {
             <mat-expansion-panel #panel expanded hideToggle>
               <mat-expansion-panel-header>
-                <mat-panel-title (click)="selectPosten(posten); $event.stopPropagation()">
-                  {{ posten.label }}
+                <mat-panel-title>
+                  <input
+                    class="posten-label-input"
+                    [value]="posten.label"
+                    (click)="selectPosten(posten); $event.stopPropagation()"
+                    (blur)="updatePostenLabel(posten.id, $any($event.target).value)"
+                  />
                   @if (posten.fahrzeug) {
                     <span class="posten-fahrzeug-text">{{ posten.fahrzeug.funkruf }}</span>
                   }
@@ -320,6 +330,11 @@
                     </div>
                   </div>
                 }
+                <div class="add-position-row">
+                  <button mat-button (click)="addPosition(posten.id)">
+                    <mat-icon>add</mat-icon> Neue Position
+                  </button>
+                </div>
               </div>
             </mat-expansion-panel>
           }
@@ -377,36 +392,26 @@
           </div>
         } @else if (selectedPosition) {
           <div class="inspector-content">
-            <h3>{{ selectedPosition.position.label }}</h3>
+            <input class="inspector-title-input" [value]="selectedPosition.position.label" (blur)="updatePositionLabel($any($event.target).value)" />
             <p class="inspector-label">Posten: {{ selectedPosition.posten.label }}</p>
 
             <div class="inspector-section">
               <div class="inspector-section-title">Anforderungen</div>
               <div class="req-row">
                 <span class="req-label">Taktisch:</span>
-                @if (selectedPosition.position.requirements.taktisch) {
-                  <span
-                    class="tag-chip"
-                    [style.background]="taktischColor(selectedPosition.position.requirements.taktisch).bg"
-                    [style.color]="taktischColor(selectedPosition.position.requirements.taktisch).fg"
-                    [matTooltip]="TAKTISCH_LABEL[selectedPosition.position.requirements.taktisch]"
-                  >{{ selectedPosition.position.requirements.taktisch }}</span>
-                } @else {
-                  <span class="none-label">Keine</span>
-                }
+                <mat-select [value]="selectedPosition.position.requirements.taktisch" (selectionChange)="updatePositionTaktisch($event.value)">
+                  @for (opt of TAKTISCH_OPTIONS; track opt) {
+                    <mat-option [value]="opt">{{ opt ?? '– Keine –' }}</mat-option>
+                  }
+                </mat-select>
               </div>
               <div class="req-row">
                 <span class="req-label">Medizinisch:</span>
-                @if (selectedPosition.position.requirements.medizinisch) {
-                  <span
-                    class="tag-chip"
-                    [style.background]="medizinischColor(selectedPosition.position.requirements.medizinisch).bg"
-                    [style.color]="medizinischColor(selectedPosition.position.requirements.medizinisch).fg"
-                    [matTooltip]="MEDIZINISCH_LABEL[selectedPosition.position.requirements.medizinisch]"
-                  >{{ selectedPosition.position.requirements.medizinisch }}</span>
-                } @else {
-                  <span class="none-label">Keine</span>
-                }
+                <mat-select [value]="selectedPosition.position.requirements.medizinisch" (selectionChange)="updatePositionMedizinisch($event.value)">
+                  @for (opt of MEDIZINISCH_OPTIONS; track opt) {
+                    <mat-option [value]="opt">{{ opt ?? '– Keine –' }}</mat-option>
+                  }
+                </mat-select>
               </div>
             </div>
 

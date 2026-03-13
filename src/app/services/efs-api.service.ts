@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { AppModeService } from './app-mode.service';
 import { EfsEinsatz, EfsEinsatzkraft, EfsEinsatzmittel } from '../models/planung.model';
 
-const EFS_API_URL = '/api/efs/';
+const EFS_API_URL = 'https://www.hiorg-server.de/api/efs/';
 
 // Raw response shapes from the HiOrg EFS-API
 interface EfsApiEnvelope {
