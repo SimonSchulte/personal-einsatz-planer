@@ -181,6 +181,36 @@ export class PlanningEditor {
     this.store.assignToPosition(postenId, positionId, ek.id);
   }
 
+  readonly positionContextMenuTarget = signal<{ postenId: string; positionId: string } | null>(null);
+  readonly positionContextMenuCoords = signal({ x: 0, y: 0 });
+  readonly positionMenuSearch = signal('');
+  @ViewChild('positionContextMenuTrigger') positionContextMenuTrigger!: MatMenuTrigger;
+
+  readonly allEksFiltered = computed(() => {
+    const p = this.planung();
+    if (!p) return [];
+    const q = this.positionMenuSearch().toLowerCase();
+    if (!q) return p.einsatzkraefte;
+    return p.einsatzkraefte.filter((e) => e.name.toLowerCase().includes(q));
+  });
+
+  onPositionContextMenu(event: MouseEvent, postenId: string, positionId: string): void {
+    event.preventDefault();
+    this.positionContextMenuTarget.set({ postenId, positionId });
+    this.positionContextMenuCoords.set({ x: event.clientX, y: event.clientY });
+    this.positionMenuSearch.set('');
+    this.positionContextMenuTrigger.openMenu();
+  }
+
+  assignFromPositionMenu(ekId: string): void {
+    const target = this.positionContextMenuTarget();
+    if (!target) return;
+    this.store.moveEinsatzkraftToPosition(ekId, target.postenId, target.positionId);
+  }
+
+  readonly rosterCollapsed = signal(false);
+  toggleRoster(): void { this.rosterCollapsed.update((v) => !v); }
+
   freePositions(posten: Posten): Position[] {
     return posten.positions.filter((p) => !p.assigned);
   }

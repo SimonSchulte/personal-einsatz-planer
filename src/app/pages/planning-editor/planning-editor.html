@@ -12,6 +12,37 @@
       #contextMenuTrigger="matMenuTrigger">
     </div>
 
+    <!-- Invisible position context menu trigger positioned at cursor -->
+    <div
+      [style.left.px]="positionContextMenuCoords().x"
+      [style.top.px]="positionContextMenuCoords().y"
+      style="position:fixed;visibility:hidden;pointer-events:none"
+      [matMenuTriggerFor]="positionContextMenu"
+      #positionContextMenuTrigger="matMenuTrigger">
+    </div>
+
+    <mat-menu #positionContextMenu class="position-context-menu">
+      <div class="ctx-search-wrap" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+        <input class="ctx-search-input" placeholder="Suchen…"
+          [value]="positionMenuSearch()"
+          (input)="positionMenuSearch.set($any($event.target).value)"
+          autofocus />
+      </div>
+      @for (ek of allEksFiltered(); track ek.id) {
+        <button mat-menu-item (click)="assignFromPositionMenu(ek.id)">
+          <span class="ctx-ek-name">{{ ek.name }}</span>
+          <span class="ctx-chips">
+            @for (tag of ek.tags.taktisch ?? []; track tag) {
+              <span class="tag-chip tag-chip--sm" [style.background]="taktischColor(tag).bg" [style.color]="taktischColor(tag).fg">{{ tag }}</span>
+            }
+            @for (tag of ek.tags.medizinisch ?? []; track tag) {
+              <span class="tag-chip tag-chip--sm" [style.background]="medizinischColor(tag).bg" [style.color]="medizinischColor(tag).fg">{{ tag }}</span>
+            }
+          </span>
+        </button>
+      }
+    </mat-menu>
+
     <mat-menu #ekContextMenu class="ek-context-menu">
       @for (posten of planung()?.posten ?? []; track posten.id) {
         @let freePos = freePositions(posten);
@@ -107,7 +138,7 @@
     <!-- Three-pane layout -->
     <div class="editor-body" cdkDropListGroup>
       <!-- LEFT: Roster -->
-      <aside class="pane pane-roster">
+      <aside class="pane pane-roster" [class.pane-roster--collapsed]="rosterCollapsed()">
         <div class="pane-header">
           <mat-icon>people</mat-icon>
           <span>Einsatzkräfte ({{ p.einsatzkraefte.length }})</span>
@@ -121,6 +152,10 @@
           }
           <button mat-icon-button matTooltip="Einsatzkräfte importieren" (click)="openImportDialog()">
             <mat-icon>upload_file</mat-icon>
+          </button>
+          <button mat-icon-button (click)="toggleRoster()"
+            [matTooltip]="rosterCollapsed() ? 'Roster einblenden' : 'Roster ausblenden'">
+            <mat-icon>{{ rosterCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
           </button>
         </div>
         <div class="roster-list"
@@ -307,7 +342,7 @@
 
               <div class="position-list">
                 @for (position of posten.positions; track position.id) {
-                  <div class="position-row">
+                  <div class="position-row" (contextmenu)="onPositionContextMenu($event, posten.id, position.id)">
                     <input class="position-label-input"
                            [value]="position.label"
                            (click)="$event.stopPropagation()"

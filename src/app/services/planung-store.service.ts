@@ -120,6 +120,28 @@ export class PlanungStoreService {
     });
   }
 
+  moveEinsatzkraftToPosition(ekId: string, toPostenId: string, toPositionId: string): void {
+    const active = this._active();
+    if (!active) return;
+    const ek = active.einsatzkraefte.find((e) => e.id === ekId);
+    if (!ek) return;
+    this.updateActive({
+      ...active,
+      posten: active.posten.map((p) => ({
+        ...p,
+        positions: p.positions.map((pos) => {
+          if (pos.assigned?.id === ekId && !(p.id === toPostenId && pos.id === toPositionId)) {
+            return { ...pos, assigned: null };
+          }
+          if (p.id === toPostenId && pos.id === toPositionId) {
+            return { ...pos, assigned: { id: ek.id, name: ek.name } };
+          }
+          return pos;
+        }),
+      })),
+    });
+  }
+
   importPlanung(planung: Planung): void {
     const exists = this._planungen().some((p) => p.id === planung.id);
     if (exists) {
