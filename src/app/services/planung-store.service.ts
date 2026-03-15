@@ -1,5 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { Einsatzkraft, EfsEinsatz, FahrzeugRef, Planung, Posten, Position } from '../models/planung.model';
+import { Einsatzkraft, EfsEinsatz, EfsEinsatzGruppe, FahrzeugRef, Planung, Posten, Position } from '../models/planung.model';
 
 @Injectable({ providedIn: 'root' })
 export class PlanungStoreService {
@@ -213,6 +213,45 @@ export class PlanungStoreService {
     this._planungen.update((list) => [...list, planung]);
     this._active.set(planung);
     return planung;
+  }
+
+  /** Creates or reopens a Planung for an EfsEinsatzGruppe and sets it as active. */
+  openEfsGruppe(gruppe: EfsEinsatzGruppe): Planung {
+    const existing = this._planungen().find((p) => p.hiorg_einsatz_id === gruppe.veranstaltung_id);
+    if (existing) {
+      this._active.set(existing);
+      this._undoStack.set([]);
+      return existing;
+    }
+    const planung: Planung = {
+      id: crypto.randomUUID(),
+      name: gruppe.titel,
+      start: gruppe.datum_von,
+      end: gruppe.datum_bis,
+      posten: [],
+      einsatzkraefte: [],
+      einsatzleiter: null,
+      hiorg_einsatz_id: gruppe.veranstaltung_id,
+    };
+    this._planungen.update((list) => [...list, planung]);
+    this._undoStack.set([]);
+    this._active.set(planung);
+    return planung;
+  }
+
+  /** Appends a Posten for a Schicht if not already present. */
+  addEfsSchichtPosten(schichtId: string, label: string, fahrzeug?: FahrzeugRef | null): void {
+    const active = this._active();
+    if (!active) return;
+    if (active.posten.some((p) => p.hiorg_schicht_id === schichtId)) return;
+    const newPosten: Posten = {
+      id: crypto.randomUUID(),
+      label,
+      fahrzeug: fahrzeug ?? null,
+      positions: [],
+      hiorg_schicht_id: schichtId,
+    };
+    this.updateActive({ ...active, posten: [...active.posten, newPosten] });
   }
 
   /**

@@ -35,7 +35,10 @@
       "Bash(curl -s \"http://localhost:4200/main.js\" 2>/dev/null | grep -o \"req-chip-[a-z]*\" | sort -u | head -20)",
       "Bash(curl -s \"http://localhost:4200/main.js\" 2>/dev/null | grep -c \"req-chip\")",
       "Bash(curl -s \"http://localhost:4200/@ng/component?c=src%2Fapp%2Fpages%2Fplanning-editor%2Fplanning-editor.ts%40PlanningEditor\" 2>/dev/null | grep -o '\"req[^\"]*\"' | sort -u | head -20)",
-      "Bash(sleep 3 && curl -s \"http://localhost:4200/@ng/component?c=src%2Fapp%2Fpages%2Fplanning-editor%2Fplanning-editor.ts%40PlanningEditor\" 2>/dev/null | head -5 | cat)"
+      "Bash(sleep 3 && curl -s \"http://localhost:4200/@ng/component?c=src%2Fapp%2Fpages%2Fplanning-editor%2Fplanning-editor.ts%40PlanningEditor\" 2>/dev/null | head -5 | cat)",
+      "WebFetch(domain:wiki.hiorg-server.de)",
+      "WebFetch(domain:www.hiorg-server.de)",
+      "WebFetch(domain:forum.hiorg-server.de)"
     ]
   }
 }

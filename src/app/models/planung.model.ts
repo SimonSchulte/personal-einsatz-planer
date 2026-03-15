@@ -41,6 +41,7 @@ export interface Posten {
   label: string;
   fahrzeug: FahrzeugRef | null;
   positions: Position[];
+  hiorg_schicht_id?: string;
 }
 
 export interface Einsatzkraft {
@@ -84,6 +85,16 @@ export interface EfsEinsatz {
   datum_von: string;
   datum_bis: string;
   ort?: string;
+  veranstaltung_id?: string;
+}
+
+export interface EfsEinsatzGruppe {
+  veranstaltung_id: string;
+  titel: string;
+  datum_von: string;
+  datum_bis: string;
+  ort?: string;
+  schichten: EfsEinsatz[];
 }
 
 export interface EfsEinsatzkraft {
@@ -97,4 +108,5 @@ export interface EfsEinsatzmittel {
   id: string;
   bezeichnung?: string;
   funkruf?: string;
+  fugcode?: string;
 }

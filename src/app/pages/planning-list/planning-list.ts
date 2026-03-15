@@ -17,7 +17,7 @@ import { AppModeService } from '../../services/app-mode.service';
 import { EfsApiService } from '../../services/efs-api.service';
 import { ImportService } from '../../services/import.service';
 import { ApiKeyDialog } from '../../components/api-key-dialog/api-key-dialog';
-import { EfsEinsatz } from '../../models/planung.model';
+import { EfsEinsatz, EfsEinsatzGruppe } from '../../models/planung.model';
 
 @Component({
   selector: 'app-planning-list',
@@ -51,19 +51,19 @@ export class PlanningList implements OnInit {
   readonly efsLoading = signal(false);
   readonly efsError = signal<string | null>(null);
 
-  readonly upcomingEinsaetze = computed(() =>
-    this.efsEinsaetze()
-      .filter((e) => {
-        const d = new Date(e.datum_bis);
-        return isNaN(d.getTime()) || d >= new Date();
-      })
-      .sort((a, b) => new Date(a.datum_von).getTime() - new Date(b.datum_von).getTime()),
+  readonly efsGruppen = computed(() => this.efsApi.groupEinsaetze(this.efsEinsaetze()));
+
+  readonly upcomingGruppen = computed(() =>
+    this.efsGruppen().filter((g) => {
+      const d = new Date(g.datum_bis);
+      return isNaN(d.getTime()) || d >= new Date();
+    }),
   );
 
-  readonly pastEinsaetze = computed(() =>
-    this.efsEinsaetze()
-      .filter((e) => {
-        const d = new Date(e.datum_bis);
+  readonly pastGruppen = computed(() =>
+    this.efsGruppen()
+      .filter((g) => {
+        const d = new Date(g.datum_bis);
         return !isNaN(d.getTime()) && d < new Date();
       })
       .sort((a, b) => new Date(b.datum_von).getTime() - new Date(a.datum_von).getTime()),
@@ -92,24 +92,40 @@ export class PlanningList implements OnInit {
     }
   }
 
-  async openEfsEinsatz(einsatz: EfsEinsatz): Promise<void> {
-    const planung = this.store.openEfsEinsatz(einsatz);
+  async openEfsGruppe(gruppe: EfsEinsatzGruppe): Promise<void> {
+    this.store.openEfsGruppe(gruppe);
     this.router.navigate(['/editor']);
 
-    // Load Einsatzkräfte in the background
+    // Load details per Schicht in the background
     try {
-      const detail = await this.efsApi.getVeranstaltungDetail(einsatz.id);
-      if (detail) {
-        const mapped = detail.einsatzkraefte.map((ek) =>
-          this.importService.mapEfsEinsatzkraft(ek),
-        );
+      const results = await Promise.all(
+        gruppe.schichten.map((s) => this.efsApi.getVeranstaltungDetail(s.id)),
+      );
+      for (let i = 0; i < gruppe.schichten.length; i++) {
+        const schicht = gruppe.schichten[i];
+        const detail = results[i];
+        if (!detail) continue;
+        const label = detail.zeitraum_bemerk ?? this.formatTimeRange(schicht);
+        const fahrzeug =
+          detail.einsatzmittel.length === 1
+            ? this.efsApi.matchFahrzeug(detail.einsatzmittel[0])
+            : null;
+        this.store.addEfsSchichtPosten(schicht.id, label, fahrzeug);
+        const mapped = detail.einsatzkraefte.map((ek) => this.importService.mapEfsEinsatzkraft(ek));
         this.store.mergeEfsEinsatzkraefte(mapped);
       }
     } catch {
-      // Non-critical: Einsatzkräfte can be loaded later via the editor
+      // Non-critical
     }
+  }
 
-    void planung;
+  private formatTimeRange(schicht: EfsEinsatz): string {
+    const fmt = (iso: string) => {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    };
+    return `${fmt(schicht.datum_von)}–${fmt(schicht.datum_bis)}`;
   }
 
   openPlanung(id: string): void {

@@ -303,13 +303,19 @@ export class PlanningEditor {
     if (!p.hiorg_einsatz_id) return;
     this.efsUpdating.set(true);
     try {
-      const detail = await this.efsApi.getVeranstaltungDetail(p.hiorg_einsatz_id);
-      if (!detail) {
+      const schichtIds = p.posten.map((po) => po.hiorg_schicht_id).filter((id): id is string => !!id);
+      const ids = schichtIds.length > 0 ? schichtIds : [p.hiorg_einsatz_id];
+      const results = await Promise.all(ids.map((id) => this.efsApi.getVeranstaltungDetail(id)));
+      const anyOk = results.some((r) => r !== null);
+      if (!anyOk) {
         window.alert('EFS-Aktualisierung fehlgeschlagen. Bitte API-Key prüfen.');
         return;
       }
-      const mapped = detail.einsatzkraefte.map((ek) => this.importService.mapEfsEinsatzkraft(ek));
-      this.store.mergeEfsEinsatzkraefte(mapped);
+      for (const detail of results) {
+        if (!detail) continue;
+        const mapped = detail.einsatzkraefte.map((ek) => this.importService.mapEfsEinsatzkraft(ek));
+        this.store.mergeEfsEinsatzkraefte(mapped);
+      }
     } catch {
       window.alert('Fehler beim Laden der Einsatzkräfte aus der EFS-API.');
     } finally {

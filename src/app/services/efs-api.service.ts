@@ -2,7 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AppModeService } from './app-mode.service';
-import { EfsEinsatz, EfsEinsatzkraft, EfsEinsatzmittel } from '../models/planung.model';
+import { EfsEinsatz, EfsEinsatzGruppe, EfsEinsatzkraft, EfsEinsatzmittel, FahrzeugRef } from '../models/planung.model';
+import { FAHRZEUGE } from '../data/fahrzeuge';
 
 const EFS_API_URL = 'https://www.hiorg-server.de/api/efs/';
 
@@ -36,6 +37,7 @@ interface EfsApiEinsatz {
   end?: string | number;
   zeitpunkt?: string | number;
   ort?: string;
+  veranstaltung_id?: string | number;
 }
 
 interface EfsApiEinsatzkraft {
@@ -59,6 +61,7 @@ interface EfsApiDetailResponse extends EfsApiEnvelope {
   end?: string | number;
   zeitpunkt?: string | number;
   ort?: string;
+  zeitraum_bemerk?: string;
   einsatzkraefte_imeinsatz?: Record<string, EfsApiEinsatzkraft>;
   einsatzmittel_imeinsatz?: Record<string, unknown>[];
 }
@@ -67,6 +70,7 @@ export interface EfsDetailResult {
   einsatz?: EfsEinsatz;
   einsatzkraefte: EfsEinsatzkraft[];
   einsatzmittel: EfsEinsatzmittel[];
+  zeitraum_bemerk?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -141,6 +145,7 @@ export class EfsApiService {
       einsatzmittel: (response.einsatzmittel_imeinsatz ?? []).map((e) =>
         this.mapEinsatzmittel(e),
       ),
+      zeitraum_bemerk: response.zeitraum_bemerk,
     };
   }
 
@@ -153,7 +158,30 @@ export class EfsApiService {
       datum_von: toDateStr(e.datum_von) ?? toDateStr(e.beginn) ?? toDateStr(e.zeitpunkt) ?? '',
       datum_bis: toDateStr(e.datum_bis) ?? toDateStr(e.end) ?? '',
       ort: e.ort,
+      veranstaltung_id: e.veranstaltung_id != null ? String(e.veranstaltung_id) : undefined,
     };
+  }
+
+  groupEinsaetze(einsaetze: EfsEinsatz[]): EfsEinsatzGruppe[] {
+    const map = new Map<string, EfsEinsatz[]>();
+    for (const e of einsaetze) {
+      const key = e.veranstaltung_id ?? e.titel;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(e);
+    }
+    const groups: EfsEinsatzGruppe[] = [];
+    for (const [key, schichten] of map) {
+      schichten.sort((a, b) => a.datum_von.localeCompare(b.datum_von));
+      groups.push({
+        veranstaltung_id: key,
+        titel: schichten[0].titel,
+        datum_von: schichten[0].datum_von,
+        datum_bis: schichten[schichten.length - 1].datum_bis,
+        ort: schichten[0].ort,
+        schichten,
+      });
+    }
+    return groups.sort((a, b) => a.datum_von.localeCompare(b.datum_von));
   }
 
   private mapEinsatzkraft(e: EfsApiEinsatzkraft): EfsEinsatzkraft {
@@ -197,6 +225,18 @@ export class EfsApiService {
       id: String(e['id'] ?? ''),
       bezeichnung: e['bezeichnung'] != null ? String(e['bezeichnung']) : undefined,
       funkruf: e['funkruf'] != null ? String(e['funkruf']) : undefined,
+      fugcode: e['fugcode'] != null ? String(e['fugcode']) : undefined,
     };
+  }
+
+  matchFahrzeug(em: EfsEinsatzmittel): FahrzeugRef | null {
+    if (!em.fugcode) return null;
+    const code = em.fugcode.toLowerCase();
+    const f =
+      FAHRZEUGE.find((v) => v.hiorgId === em.fugcode) ??
+      FAHRZEUGE.find((v) => v.funkruf.toLowerCase() === code) ??
+      FAHRZEUGE.find((v) => v.seriennummer.toLowerCase() === code);
+    if (!f) return null;
+    return { seriennummer: f.seriennummer, funkruf: f.funkruf, hiorgId: f.hiorgId };
   }
 }
