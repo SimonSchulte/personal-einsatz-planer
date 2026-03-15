@@ -198,6 +198,11 @@
     width: 36px;
     overflow: hidden;
 
+    .pane-header {
+      padding: 0;
+      justify-content: center;
+    }
+
     .pane-header > :not(button:last-child) {
       display: none;
     }
@@ -218,7 +223,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 0 16px;
+  min-height: 64px;
   font-weight: 500;
   background: #f5f5f5;
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
