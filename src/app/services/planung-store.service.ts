@@ -302,7 +302,17 @@ export class PlanungStoreService {
       }),
     }));
 
-    this.updateActive({ ...active, posten: resolvedPosten });
+    const isHiorgLinked = !!active.hiorg_einsatz_id;
+    this.updateActive({
+      ...active,
+      ...(isHiorgLinked ? {} : {
+        name: template.name,
+        start: template.start,
+        end: template.end,
+      }),
+      beschreibung: template.beschreibung,
+      posten: resolvedPosten,
+    });
   }
 
   unassignFromPosition(postenId: string, positionId: string): void {
