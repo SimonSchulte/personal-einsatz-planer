@@ -4,7 +4,7 @@ html {
   @include mat.theme((
     color: (
       theme-type: light,
-      primary: mat.$violet-palette,
+      primary: mat.$red-palette,
       secondary: mat.$red-palette,
       tertiary: mat.$red-palette,
     ),
@@ -12,6 +12,8 @@ html {
     density: -1,
   ));
 
+  --mat-sys-primary: #EB003C;
+  --mat-sys-on-primary: #FFFFFF;
   --mat-sys-secondary: #EB003C;
   --mat-sys-on-secondary: #FFFFFF;
 }

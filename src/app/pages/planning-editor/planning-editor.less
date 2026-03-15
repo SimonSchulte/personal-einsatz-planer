@@ -64,6 +64,12 @@
   }
 }
 
+.toolbar-field--locked {
+  opacity: 0.55;
+  cursor: default;
+  border-bottom-color: transparent !important;
+}
+
 .time-input {
   background: transparent;
   border: none;
@@ -193,28 +199,6 @@
   min-width: 0;
 }
 
-.pane-inspector {
-  width: 280px;
-  flex-shrink: 0;
-  transition: width 0.2s ease;
-
-  .inspector-content,
-  .inspector-hint {
-    opacity: 1;
-    pointer-events: auto;
-    transition: opacity 0.15s ease;
-  }
-
-  &.collapsed {
-    width: 40px;
-
-    .inspector-content,
-    .inspector-hint {
-      opacity: 0;
-      pointer-events: none;
-    }
-  }
-}
 
 .pane-header {
   display: flex;
@@ -297,18 +281,6 @@
   text-decoration: underline;
 }
 
-.collapse-btn {
-  width: 28px;
-  height: 28px;
-  line-height: 28px;
-  flex-shrink: 0;
-
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
-}
 
 .pane-subheader {
   padding: 4px 12px;
@@ -346,6 +318,33 @@
   padding: 8px;
 }
 
+.roster-search-bar {
+  padding: 4px 0 8px;
+}
+
+.roster-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px 6px 32px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  color: rgba(0, 0, 0, 0.87);
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23757575' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+
+  &::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  &:focus {
+    border-color: var(--color-primary, #1976d2);
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.15);
+  }
+}
+
 .einsatzkraft-card {
   padding: 8px 10px;
   border-radius: 6px;
@@ -372,32 +371,7 @@
   }
 }
 
-/* ---- Tag Chips ---- */
-.tag-chip {
-  display: inline-block;
-  padding: 1px 7px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.6;
-  white-space: nowrap;
-}
-
-.tag-chip--sm {
-  padding: 0 5px;
-  font-size: 0.65rem;
-  line-height: 1.5;
-}
-
-.tag-zusatz {
-  background: #e0e0e0;
-  color: #333;
-}
-
-.req-any {
-  background: #e0e0e0;
-  color: #666;
-}
+/* tag-chip styles are global (see styles.less) */
 
 /* ---- Posten header title gap ---- */
 .mat-expansion-panel-header .mat-panel-title {
@@ -444,29 +418,49 @@
   }
 }
 
-.posten-fahrzeug-text {
+.posten-fahrzeug-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+
+  .fahrzeug-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: rgba(0, 0, 0, 0.45);
+    flex-shrink: 0;
+  }
+}
+
+.fahrzeug-inline-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
   font-size: 0.78rem;
+  font-family: inherit;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.60);
-  margin-left: 8px;
-  white-space: nowrap;
-}
+  padding: 2px 4px;
+  width: 16ch;
+  border-radius: 4px 4px 0 0;
+  transition: border-color 0.15s, background 0.15s;
 
-.inspector-fahrzeug-funkruf {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin: 0 0 2px;
-  color: rgba(0, 0, 0, 0.87);
-}
+  &::placeholder {
+    color: rgba(0, 0, 0, 0.30);
+  }
 
-.inspector-fahrzeug-meta {
-  font-size: 0.78rem;
-  color: rgba(0, 0, 0, 0.45);
-  margin: 0 0 12px;
-}
+  &:hover {
+    border-bottom-color: rgba(0, 0, 0, 0.42);
+  }
 
-.inspector-fahrzeug-field {
-  width: 100%;
+  &:focus {
+    outline: none;
+    border-bottom: 2px solid var(--ci-blue);
+    background: rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.87);
+    padding-bottom: 1px;
+  }
 }
 
 .position-list {
@@ -485,31 +479,59 @@
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: var(--surface-tertiary);
-  cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 
   &:hover {
     background: var(--surface-hover);
   }
-
-  &.selected {
-    border-color: var(--ci-blue);
-    background: color-mix(in srgb, var(--ci-blue) 10%, transparent);
-  }
 }
 
-.position-label {
+.position-label-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
   font-size: 0.875rem;
+  font-family: inherit;
   font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border-radius: 4px 4px 0 0;
+  width: calc(100% + 8px);
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-bottom-color: rgba(0, 0, 0, 0.42);
+  }
+
+  &:focus {
+    outline: none;
+    border-bottom: 2px solid var(--ci-blue);
+    background: rgba(0, 0, 0, 0.04);
+    padding-bottom: 1px;
+  }
 }
 
 .position-reqs {
   display: flex;
   gap: 4px;
+  align-items: center;
+}
 
-  .req-chip {
-    min-width: 36px;
-    text-align: center;
+.req-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+
+  .req-arrow {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: rgba(0, 0, 0, 0.38);
   }
 }
 
@@ -597,67 +619,6 @@
   font-style: italic;
 }
 
-/* ---- Inspector ---- */
-.inspector-content {
-  padding: 16px;
-
-  h3 {
-    margin: 0 0 4px;
-    font-size: 1rem;
-  }
-
-  .inspector-label {
-    color: rgba(0, 0, 0, 0.6);
-    font-size: 0.85rem;
-    margin-bottom: 16px;
-  }
-}
-
-.inspector-section {
-  margin-bottom: 16px;
-
-  .inspector-section-title {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: rgba(0, 0, 0, 0.60);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 8px;
-  }
-}
-
-.req-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-
-  .req-label {
-    font-size: 0.85rem;
-    color: rgba(0, 0, 0, 0.6);
-    min-width: 90px;
-  }
-}
-
-.none-label {
-  color: rgba(0, 0, 0, 0.38);
-  font-style: italic;
-  font-size: 0.85rem;
-}
-
-.assigned-person {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-}
-
-.inspector-hint {
-  padding: 16px;
-  color: rgba(0, 0, 0, 0.38);
-  font-style: italic;
-  font-size: 0.875rem;
-}
 
 /* ---- Drag & Drop ---- */
 .assigned-drag-item {

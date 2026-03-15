@@ -99,13 +99,10 @@ export class PlanningEditor {
   readonly planung = this.store.active;
   readonly canUndo = this.store.canUndo;
   readonly efsUpdating = signal(false);
+  readonly isEfsLocked = computed(
+    () => this.appMode.mode() === 'connected-to-efs-api' && !!this.store.active()?.hiorg_einsatz_id,
+  );
 
-  /** Selected items for inspector pane — Posten takes priority over Position */
-  selectedPosten: Posten | null = null;
-  selectedPosition: { posten: Posten; position: Position } | null = null;
-
-  readonly inspectorCollapsed = signal(true);
-  toggleInspector(): void { this.inspectorCollapsed.update(v => !v); }
   toggleAssignedList(): void { this.assignedListCollapsed.update(v => !v); }
 
   readonly TAKTISCH_LABEL: Record<Taktisch, string> = {
@@ -132,7 +129,8 @@ export class PlanningEditor {
   readonly TAKTISCH_OPTIONS: (Taktisch | null)[] = [null, ...TAKTISCH_ORDER];
   readonly MEDIZINISCH_OPTIONS: (Medizinisch | null)[] = [null, ...MEDIZINISCH_ORDER];
 
-  readonly fahrzeugFilter = signal<Record<string, string>>({});
+  /** null = not focused (show stored vehicle); string = focused/typing */
+  readonly fahrzeugFilter = signal<Record<string, string | null>>({});
 
   filteredFahrzeuge(postenId: string): Fahrzeug[] {
     const q = (this.fahrzeugFilter()[postenId] ?? '').toLowerCase();
@@ -143,10 +141,12 @@ export class PlanningEditor {
   }
 
   fahrzeugInputValue(posten: Posten): string {
-    return this.fahrzeugFilter()[posten.id] ?? '';
+    const filter = this.fahrzeugFilter()[posten.id];
+    if (filter === null || filter === undefined) return posten.fahrzeug?.funkruf ?? '';
+    return filter;
   }
 
-  updateFahrzeugFilter(postenId: string, value: string): void {
+  updateFahrzeugFilter(postenId: string, value: string | null): void {
     this.fahrzeugFilter.update((m) => ({ ...m, [postenId]: value }));
   }
 
@@ -161,15 +161,7 @@ export class PlanningEditor {
       };
       this.store.setPostenFahrzeug(postenId, ref);
     }
-    this.fahrzeugFilter.update((m) => ({ ...m, [postenId]: '' }));
-    // Keep selectedPosten in sync with updated store state
-    if (this.selectedPosten?.id === postenId) {
-      this.selectedPosten = this.planung()?.posten.find((p) => p.id === postenId) ?? null;
-    }
-  }
-
-  fahrzeugDisplayFn(_: Fahrzeug | null): string {
-    return '';
+    this.fahrzeugFilter.update((m) => ({ ...m, [postenId]: null }));
   }
 
   readonly contextMenuEk = signal<Einsatzkraft | null>(null);
@@ -336,18 +328,6 @@ export class PlanningEditor {
     if (window.confirm(msg)) {
       this.store.clearPosten(posten.id);
     }
-  }
-
-  selectPosten(posten: Posten): void {
-    this.selectedPosten = posten;
-    this.selectedPosition = null;
-    this.inspectorCollapsed.set(false);
-  }
-
-  selectPosition(posten: Posten, position: Position): void {
-    this.selectedPosten = null;
-    this.selectedPosition = { posten, position };
-    this.inspectorCollapsed.set(false);
   }
 
   assignedCount(posten: Posten): number {
@@ -545,43 +525,33 @@ export class PlanningEditor {
     this.store.updatePostenLabel(postenId, label);
   }
 
-  updatePositionLabel(value: string): void {
-    if (!this.selectedPosition) return;
-    const updated = { ...this.selectedPosition.position, label: value };
-    this.store.updatePosition(this.selectedPosition.posten.id, updated);
-    this.selectedPosition = { ...this.selectedPosition, position: updated };
+  updatePositionLabel(postenId: string, positionId: string, value: string): void {
+    const p = this.planung();
+    if (!p) return;
+    const position = p.posten.find((po) => po.id === postenId)?.positions.find((pos) => pos.id === positionId);
+    if (!position) return;
+    this.store.updatePosition(postenId, { ...position, label: value });
   }
 
-  updatePositionTaktisch(value: Taktisch | null): void {
-    if (!this.selectedPosition) return;
-    const updated = {
-      ...this.selectedPosition.position,
-      requirements: { ...this.selectedPosition.position.requirements, taktisch: value },
-    };
-    this.store.updatePosition(this.selectedPosition.posten.id, updated);
-    this.selectedPosition = { ...this.selectedPosition, position: updated };
+  updatePositionTaktisch(postenId: string, positionId: string, value: Taktisch | null): void {
+    const p = this.planung();
+    if (!p) return;
+    const position = p.posten.find((po) => po.id === postenId)?.positions.find((pos) => pos.id === positionId);
+    if (!position) return;
+    this.store.updatePosition(postenId, { ...position, requirements: { ...position.requirements, taktisch: value } });
   }
 
-  updatePositionMedizinisch(value: Medizinisch | null): void {
-    if (!this.selectedPosition) return;
-    const updated = {
-      ...this.selectedPosition.position,
-      requirements: { ...this.selectedPosition.position.requirements, medizinisch: value },
-    };
-    this.store.updatePosition(this.selectedPosition.posten.id, updated);
-    this.selectedPosition = { ...this.selectedPosition, position: updated };
+  updatePositionMedizinisch(postenId: string, positionId: string, value: Medizinisch | null): void {
+    const p = this.planung();
+    if (!p) return;
+    const position = p.posten.find((po) => po.id === postenId)?.positions.find((pos) => pos.id === positionId);
+    if (!position) return;
+    this.store.updatePosition(postenId, { ...position, requirements: { ...position.requirements, medizinisch: value } });
   }
 
   undo(): void {
     this.store.undo();
-    const p = this.store.active();
-    if (this.selectedPosition && p) {
-      const posten = p.posten.find((po) => po.id === this.selectedPosition!.posten.id);
-      const position = posten?.positions.find((pos) => pos.id === this.selectedPosition!.position.id);
-      this.selectedPosition = posten && position ? { posten, position } : null;
-    }
-    if (this.selectedPosten && p) {
-      this.selectedPosten = p.posten.find((po) => po.id === this.selectedPosten!.id) ?? null;
-    }
   }
 }
+
+

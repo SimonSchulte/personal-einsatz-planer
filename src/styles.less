@@ -78,11 +78,11 @@ body {
 
 /* Global focus indicators */
 :focus-visible {
-  outline: 2px solid var(--ci-dark-blue);
+  outline: 2px solid var(--ci-red);
   outline-offset: 2px;
 }
 .mat-mdc-icon-button:focus-visible {
-  outline: 2px solid var(--ci-dark-blue);
+  outline: 2px solid var(--ci-red);
   outline-offset: 2px;
 }
 
@@ -176,6 +176,34 @@ a[mat-stroked-button][color='secondary'] {
     color: var(--ci-red) !important;
   }
 }
+
+/* ---- Tag Chips (global — used inside overlays too) ---- */
+.tag-chip {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.tag-chip--sm {
+  padding: 0 5px;
+  font-size: 0.65rem;
+  line-height: 1.5;
+}
+
+.tag-zusatz {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.req-any {
+  background: #e0e0e0;
+  color: #666;
+}
+
 
 /* Mobile guard overlay */
 .mobile-unsupported {

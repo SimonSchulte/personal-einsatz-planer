@@ -50,11 +50,21 @@ interface EfsApiEinsatzkraft {
 }
 
 interface EfsApiDetailResponse extends EfsApiEnvelope {
+  id?: string | number;
+  titel?: string;
+  stichwort?: string;
+  datum_von?: string;
+  datum_bis?: string;
+  beginn?: string | number;
+  end?: string | number;
+  zeitpunkt?: string | number;
+  ort?: string;
   einsatzkraefte_imeinsatz?: Record<string, EfsApiEinsatzkraft>;
   einsatzmittel_imeinsatz?: Record<string, unknown>[];
 }
 
 export interface EfsDetailResult {
+  einsatz?: EfsEinsatz;
   einsatzkraefte: EfsEinsatzkraft[];
   einsatzmittel: EfsEinsatzmittel[];
 }
@@ -109,7 +119,22 @@ export class EfsApiService {
       ),
     );
     if (response.status !== 'OK') return null;
+    const einsatz =
+      response.titel || response.stichwort || response.datum_von
+        ? this.mapEinsatz({
+            id: response.id ?? id,
+            titel: response.titel,
+            stichwort: response.stichwort,
+            datum_von: response.datum_von,
+            datum_bis: response.datum_bis,
+            beginn: response.beginn,
+            end: response.end,
+            zeitpunkt: response.zeitpunkt,
+            ort: response.ort,
+          })
+        : undefined;
     return {
+      einsatz,
       einsatzkraefte: Object.values(response.einsatzkraefte_imeinsatz ?? {}).map((e) =>
         this.mapEinsatzkraft(e),
       ),

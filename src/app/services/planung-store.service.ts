@@ -301,6 +301,15 @@ export class PlanungStoreService {
     });
   }
 
+  /** Silently updates Stammdaten from EFS (no undo entry — authoritative sync). */
+  updateEfsStammdaten(einsatz: EfsEinsatz): void {
+    const active = this._active();
+    if (!active) return;
+    const updated = { ...active, name: einsatz.titel, start: einsatz.datum_von, end: einsatz.datum_bis };
+    this._active.set(updated);
+    this._planungen.update((list) => list.map((p) => (p.id === active.id ? updated : p)));
+  }
+
   updateEinsatzkraftNotes(id: string, notes: string): void {
     const active = this._active();
     if (!active) return;

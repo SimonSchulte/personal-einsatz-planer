@@ -25,7 +25,17 @@
       "mcp__playwright__browser_take_screenshot",
       "mcp__playwright__browser_navigate",
       "mcp__playwright__browser_click",
-      "mcp__playwright__browser_console_messages"
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_snapshot",
+      "mcp__ide__getDiagnostics",
+      "mcp__playwright__browser_evaluate",
+      "Bash(tasklist /fi \"imagename eq node.exe\" 2>/dev/null | head -20)",
+      "mcp__playwright__browser_press_key",
+      "Bash(netstat -an 2>/dev/null | grep \":4200\" || curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4200/ 2>/dev/null)",
+      "Bash(curl -s \"http://localhost:4200/main.js\" 2>/dev/null | grep -o \"req-chip-[a-z]*\" | sort -u | head -20)",
+      "Bash(curl -s \"http://localhost:4200/main.js\" 2>/dev/null | grep -c \"req-chip\")",
+      "Bash(curl -s \"http://localhost:4200/@ng/component?c=src%2Fapp%2Fpages%2Fplanning-editor%2Fplanning-editor.ts%40PlanningEditor\" 2>/dev/null | grep -o '\"req[^\"]*\"' | sort -u | head -20)",
+      "Bash(sleep 3 && curl -s \"http://localhost:4200/@ng/component?c=src%2Fapp%2Fpages%2Fplanning-editor%2Fplanning-editor.ts%40PlanningEditor\" 2>/dev/null | head -5 | cat)"
     ]
   }
 }
