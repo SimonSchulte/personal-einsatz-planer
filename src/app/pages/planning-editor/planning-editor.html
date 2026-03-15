@@ -140,7 +140,7 @@
       <!-- LEFT: Roster -->
       <aside class="pane pane-roster" [class.pane-roster--collapsed]="rosterCollapsed()">
         <div class="pane-header">
-          <mat-icon>people</mat-icon>
+          <mat-icon>groups</mat-icon>
           <span>Einsatzkräfte ({{ p.einsatzkraefte.length }})</span>
           @if (appMode.mode() === 'connected-to-efs-api' && p.hiorg_einsatz_id) {
             <button mat-icon-button
@@ -243,7 +243,7 @@
       <!-- CENTER: Posten/Position Tree -->
       <main class="pane pane-tree">
         <div class="pane-header">
-          <mat-icon>account_tree</mat-icon>
+          <mat-icon>grid_view</mat-icon>
           <span>Einsatzplan</span>
           <span class="spacer"></span>
           <div class="staerke-block" role="grid" aria-label="Gesamtstärke">
