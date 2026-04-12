@@ -141,7 +141,12 @@
       <aside class="pane pane-roster" [class.pane-roster--collapsed]="rosterCollapsed()">
         <div class="pane-header">
           <mat-icon>groups</mat-icon>
-          <span>Einsatzkräfte ({{ p.einsatzkraefte.length }})</span>
+          <span class="roster-header-text">
+            Einsatzkräfte
+            @if (rosterProgress(); as prog) {
+              <span class="roster-progress-count">{{ prog.assigned }}/{{ prog.total }} zugewiesen</span>
+            }
+          </span>
           @if (appMode.mode() === 'connected-to-efs-api' && p.hiorg_einsatz_id) {
             <button mat-icon-button
                     [matTooltip]="efsUpdating() ? 'Wird aktualisiert…' : 'Aus EFS aktualisieren'"
@@ -158,6 +163,15 @@
             <mat-icon>{{ rosterCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
           </button>
         </div>
+        @if (rosterProgress(); as prog) {
+          <div class="roster-progress-bar-wrap"
+               [matTooltip]="prog.assigned + ' von ' + prog.soll + ' Positionen besetzt'">
+            <div class="roster-progress-bar-fill"
+                 [style.width.%]="prog.soll > 0 ? (prog.assigned / prog.soll) * 100 : 0"
+                 [class.roster-progress-bar-fill--complete]="prog.assigned >= prog.soll">
+            </div>
+          </div>
+        }
         <div class="roster-list"
              cdkDropList
              cdkDropListSortingDisabled
@@ -165,6 +179,26 @@
           <div class="roster-search-bar">
             <input class="roster-search-input" placeholder="Suchen…" [value]="rosterSearch()" (input)="rosterSearch.set($any($event.target).value)" aria-label="Einsatzkräfte suchen" />
           </div>
+          @if (rosterAvailableTags().taktisch.length > 0 || rosterAvailableTags().medizinisch.length > 0) {
+            <div class="roster-tag-filters">
+              @for (tag of rosterAvailableTags().taktisch; track tag) {
+                <button class="filter-chip"
+                        [class.filter-chip--active]="rosterTagFilter() === tag"
+                        [style.background]="rosterTagFilter() === tag ? taktischColor(tag).bg : ''"
+                        [style.color]="rosterTagFilter() === tag ? taktischColor(tag).fg : ''"
+                        [matTooltip]="TAKTISCH_LABEL[tag]"
+                        (click)="toggleRosterTagFilter(tag)">{{ tag }}</button>
+              }
+              @for (tag of rosterAvailableTags().medizinisch; track tag) {
+                <button class="filter-chip"
+                        [class.filter-chip--active]="rosterTagFilter() === tag"
+                        [style.background]="rosterTagFilter() === tag ? medizinischColor(tag).bg : ''"
+                        [style.color]="rosterTagFilter() === tag ? medizinischColor(tag).fg : ''"
+                        [matTooltip]="MEDIZINISCH_LABEL[tag]"
+                        (click)="toggleRosterTagFilter(tag)">{{ tag }}</button>
+              }
+            </div>
+          }
           @for (person of filteredRoster(); track person.id) {
             <div class="einsatzkraft-card available"
                  cdkDrag
@@ -172,28 +206,31 @@
                  (cdkDragStarted)="onDragStarted($event)"
                  (cdkDragEnded)="onDragEnded()"
                  (contextmenu)="onContextMenu($event, person)">
-              <span class="ek-name">{{ person.name }}</span>
-              <div class="ek-chips">
-                @for (tag of person.tags.taktisch ?? []; track tag) {
-                  <span
-                    class="tag-chip"
-                    [style.background]="taktischColor(tag).bg"
-                    [style.color]="taktischColor(tag).fg"
-                    [style.border]="tag === 'VF' ? '1px solid #000548' : 'none'"
-                    [matTooltip]="TAKTISCH_LABEL[tag]"
-                  >{{ tag }}</span>
-                }
-                @for (tag of person.tags.medizinisch ?? []; track tag) {
-                  <span
-                    class="tag-chip"
-                    [style.background]="medizinischColor(tag).bg"
-                    [style.color]="medizinischColor(tag).fg"
-                    [matTooltip]="MEDIZINISCH_LABEL[tag]"
-                  >{{ tag }}</span>
-                }
-                @for (tag of person.tags.zusatz ?? []; track tag) {
-                  <span class="tag-chip tag-zusatz">{{ tag }}</span>
-                }
+              <mat-icon class="drag-handle-icon">drag_indicator</mat-icon>
+              <div class="ek-body">
+                <span class="ek-name">{{ person.name }}</span>
+                <div class="ek-chips">
+                  @for (tag of person.tags.taktisch ?? []; track tag) {
+                    <span
+                      class="tag-chip"
+                      [style.background]="taktischColor(tag).bg"
+                      [style.color]="taktischColor(tag).fg"
+                      [style.border]="tag === 'VF' ? '1px solid #000548' : 'none'"
+                      [matTooltip]="TAKTISCH_LABEL[tag]"
+                    >{{ tag }}</span>
+                  }
+                  @for (tag of person.tags.medizinisch ?? []; track tag) {
+                    <span
+                      class="tag-chip"
+                      [style.background]="medizinischColor(tag).bg"
+                      [style.color]="medizinischColor(tag).fg"
+                      [matTooltip]="MEDIZINISCH_LABEL[tag]"
+                    >{{ tag }}</span>
+                  }
+                  @for (tag of person.tags.zusatz ?? []; track tag) {
+                    <span class="tag-chip tag-zusatz">{{ tag }}</span>
+                  }
+                </div>
               </div>
             </div>
           }
@@ -216,23 +253,26 @@
           @if (!assignedListCollapsed()) {
             @for (person of p.einsatzkraefte; track person.id) {
               <div class="einsatzkraft-card">
-                <span class="ek-name">{{ person.name }}</span>
-                <div class="ek-chips">
-                  @for (tag of person.tags.taktisch ?? []; track tag) {
-                    <span
-                      class="tag-chip"
-                      [style.background]="taktischColor(tag).bg"
-                      [style.color]="taktischColor(tag).fg"
-                      [style.border]="tag === 'VF' ? '1px solid #000548' : 'none'"
-                    >{{ tag }}</span>
-                  }
-                  @for (tag of person.tags.medizinisch ?? []; track tag) {
-                    <span
-                      class="tag-chip"
-                      [style.background]="medizinischColor(tag).bg"
-                      [style.color]="medizinischColor(tag).fg"
-                    >{{ tag }}</span>
-                  }
+                <mat-icon class="drag-handle-icon">drag_indicator</mat-icon>
+                <div class="ek-body">
+                  <span class="ek-name">{{ person.name }}</span>
+                  <div class="ek-chips">
+                    @for (tag of person.tags.taktisch ?? []; track tag) {
+                      <span
+                        class="tag-chip"
+                        [style.background]="taktischColor(tag).bg"
+                        [style.color]="taktischColor(tag).fg"
+                        [style.border]="tag === 'VF' ? '1px solid #000548' : 'none'"
+                      >{{ tag }}</span>
+                    }
+                    @for (tag of person.tags.medizinisch ?? []; track tag) {
+                      <span
+                        class="tag-chip"
+                        [style.background]="medizinischColor(tag).bg"
+                        [style.color]="medizinischColor(tag).fg"
+                      >{{ tag }}</span>
+                    }
+                  </div>
                 </div>
               </div>
             }
@@ -410,6 +450,19 @@
                          [cdkDropListData]="{ postenId: posten.id, positionId: position.id }"
                          [class]="'match-' + positionMatchClass(position, draggingEinsatzkraft() ?? assignedPerson(position))"
                          (cdkDropListDropped)="onDropToPosition($event)">
+                      @let matchCls = positionMatchClass(position, assignedPerson(position));
+                      <mat-icon class="match-status-icon"
+                                [class.match-status-icon--full]="matchCls === 'full'"
+                                [class.match-status-icon--partial]="matchCls === 'partial'"
+                                [class.match-status-icon--mismatch]="matchCls === 'mismatch'"
+                                [class.match-status-icon--empty]="!position.assigned">
+                        {{ position.assigned
+                            ? (matchCls === 'full' ? 'check_circle'
+                              : matchCls === 'partial' ? 'warning'
+                              : matchCls === 'mismatch' ? 'cancel'
+                              : 'radio_button_unchecked')
+                            : 'radio_button_unchecked' }}
+                      </mat-icon>
                       @if (position.assigned) {
                         <div cdkDrag
                              [cdkDragData]="{ einsatzkraftId: position.assigned.id, fromPostenId: posten.id, fromPositionId: position.id }"
@@ -427,10 +480,18 @@
                                 @for (tag of person.tags.medizinisch ?? []; track tag) {
                                   <span class="tag-chip tag-chip--sm" [style.background]="medizinischColor(tag).bg" [style.color]="medizinischColor(tag).fg" [matTooltip]="MEDIZINISCH_LABEL[tag]">{{ tag }}</span>
                                 }
+                                @for (tag of person.tags.zusatz ?? []; track tag) {
+                                  <span class="tag-chip tag-chip--sm tag-zusatz" [matTooltip]="tag">{{ tag }}</span>
+                                }
                               </div>
                             }
                           </div>
                         </div>
+                        <button mat-icon-button class="unassign-btn"
+                                matTooltip="Zuteilung aufheben"
+                                (click)="unassignFromPosition(posten.id, position.id); $event.stopPropagation()">
+                          <mat-icon>close</mat-icon>
+                        </button>
                       } @else {
                         <mat-icon class="assign-icon unassigned">person_add</mat-icon>
                         <span class="unassigned-label">Nicht besetzt</span>

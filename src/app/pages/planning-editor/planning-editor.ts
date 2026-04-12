@@ -217,8 +217,35 @@ export class PlanningEditor {
 
   readonly draggingEinsatzkraft = signal<Einsatzkraft | null>(null);
   readonly assignedListCollapsed = signal(true);
+  readonly rosterProgress = computed(() => {
+    const p = this.planung();
+    if (!p) return null;
+    const total = p.einsatzkraefte.length;
+    const assigned = total - this.unassignedRoster(p).length;
+    const soll = p.posten.reduce((acc, po) => acc + po.positions.length, 0);
+    return { assigned, total, soll };
+  });
   readonly rosterSearch = signal('');
   readonly rosterTagFilter = signal<string | null>(null);
+  readonly rosterAvailableTags = computed(() => {
+    const p = this.planung();
+    if (!p) return { taktisch: [] as Taktisch[], medizinisch: [] as Medizinisch[] };
+    const tSet = new Set<Taktisch>();
+    const mSet = new Set<Medizinisch>();
+    for (const ek of p.einsatzkraefte) {
+      (ek.tags.taktisch ?? []).forEach((t) => tSet.add(t));
+      (ek.tags.medizinisch ?? []).forEach((t) => mSet.add(t));
+    }
+    return {
+      taktisch: TAKTISCH_ORDER.filter((t) => tSet.has(t)),
+      medizinisch: MEDIZINISCH_ORDER.filter((t) => mSet.has(t)),
+    };
+  });
+
+  toggleRosterTagFilter(tag: string): void {
+    this.rosterTagFilter.update((c) => (c === tag ? null : tag));
+  }
+
   readonly filteredRoster = computed(() => {
     const p = this.planung();
     if (!p) return [];
@@ -390,6 +417,10 @@ export class PlanningEditor {
   positionMatchClass(position: Position, einsatzkraft?: Einsatzkraft | null): string {
     if (!einsatzkraft) return 'neutral';
     return this.matchLevel(position, einsatzkraft);
+  }
+
+  unassignFromPosition(postenId: string, positionId: string): void {
+    this.store.unassignFromPosition(postenId, positionId);
   }
 
   private matchLevel(position: Position, person: Einsatzkraft): MatchLevel {

@@ -27,7 +27,7 @@ Mode switch is triggered via the API-Key dialog on the Planning List / Dashboard
 - **Actions:** `checkapikey`, `getveranstaltungen`, `getveranstaltung` (with `id`)
 - **Dashboard:** Shows EFS Einsatz list (upcoming / past). Clicking an Einsatz creates a new Planung with `hiorg_einsatz_id` set and loads Einsatzkräfte in the background.
 - **Editor:** Sync button updates Einsatzkräfte from EFS (merge by `hiorg_org_id`, then name).
-- **Qualification mapping:** `med_qual` / `fuehr_qual` strings from EFS are mapped to Taktisch / Medizinisch enum values.
+- **Qualification mapping:** `med_qual` / `fuehr_qual` / `bes_ausbild` strings from EFS are mapped to Taktisch / Medizinisch enum values. Known mappings include `"Notarzt / Notärztin"` → `NA` (via `bes_ausbild`). Unknown strings fall back to `zusatz[]`.
 
 ---
 
