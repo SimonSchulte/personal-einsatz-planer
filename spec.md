@@ -151,6 +151,16 @@ Qualification lists are ordered arrays (lowest → highest). A higher-level qual
 | RA, NotSan | `#EB003C` | `#FFFFFF` |
 | A, NA | `#4A6FB8` | `#FFFFFF` |
 
+### Fahrerlaubnis
+
+| Qualifier(s) | Background | Text |
+|---|---|---|
+| B | `#e7e6e6` | `#000548` |
+| C1 | `#2F8F68` | `#FFFFFF` |
+| C | `#4A6FB8` | `#000548` |
+| A | `#00b0f0` | `#FFFFFF` |
+| E | `#7c7c7c` | `#FFFFFF` |
+
 ### Match Visualization
 
 - **Matched requirement:** subtle green outline or check icon on position.

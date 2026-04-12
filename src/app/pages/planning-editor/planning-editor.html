@@ -279,6 +279,7 @@
                     class="posten-label-input"
                     [value]="posten.label"
                     (click)="$event.stopPropagation()"
+                    (keydown)="$event.stopPropagation()"
                     (blur)="updatePostenLabel(posten.id, $any($event.target).value)"
                   />
                   <div class="posten-fahrzeug-inline" (click)="$event.stopPropagation()">
