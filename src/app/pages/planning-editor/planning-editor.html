@@ -456,11 +456,9 @@
                                 [class.match-status-icon--partial]="matchCls === 'partial'"
                                 [class.match-status-icon--mismatch]="matchCls === 'mismatch'"
                                 [class.match-status-icon--empty]="!position.assigned">
-                        {{ position.assigned
-                            ? (matchCls === 'full' ? 'check_circle'
-                              : matchCls === 'partial' ? 'warning'
-                              : matchCls === 'mismatch' ? 'cancel'
-                              : 'radio_button_unchecked')
+                        {{ matchCls === 'full' ? 'check_circle'
+                            : matchCls === 'partial' ? 'warning'
+                            : matchCls === 'mismatch' ? 'cancel'
                             : 'radio_button_unchecked' }}
                       </mat-icon>
                       @if (position.assigned) {
