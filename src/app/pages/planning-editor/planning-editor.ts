@@ -476,10 +476,7 @@ export class PlanningEditor {
   postenIst(posten: Posten): Staerke {
     const assigned = posten.positions.filter((p) => p.assigned);
     const s = { fuhrer: 0, unterfuehrer: 0, helfer: 0, gesamt: assigned.length };
-    for (const pos of assigned) {
-      const person = this.planung()!.einsatzkraefte.find((e) => e.id === pos.assigned!.id);
-      s[person ? this.istRole(person) : 'helfer']++;
-    }
+    for (const pos of assigned) s[this.sollRole(pos.requirements.taktisch)]++;
     return s;
   }
 
@@ -493,10 +490,7 @@ export class PlanningEditor {
   planungIst(planung: Planung): Staerke {
     const assigned = planung.posten.flatMap((p) => p.positions).filter((p) => p.assigned);
     const s = { fuhrer: 0, unterfuehrer: 0, helfer: 0, gesamt: assigned.length };
-    for (const pos of assigned) {
-      const person = planung.einsatzkraefte.find((e) => e.id === pos.assigned!.id);
-      s[person ? this.istRole(person) : 'helfer']++;
-    }
+    for (const pos of assigned) s[this.sollRole(pos.requirements.taktisch)]++;
     return s;
   }
 

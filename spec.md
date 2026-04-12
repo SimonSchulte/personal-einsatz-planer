@@ -317,6 +317,8 @@ For each requirement type (`taktisch` / `medizinisch`): requirement `R` is satis
 
 **Soll** is derived from the `requirements.taktisch` fields of the Positions within the Posten.
 
+**Ist-Rolle:** Eine eingeteile Einsatzkraft wird für die IST-Zählung nach der Anforderung (`requirements.taktisch`) der Position eingestuft, auf der sie eingeteilt ist — **nicht** nach ihrer eigenen höchsten Qualifikation. Damit spiegelt der IST-Wert den tatsächlichen Einsatz wider (z. B. zählt eine ZF auf einer H-Position als Helfer).
+
 ### Accessibility
 
 Keyboard assign/unassign support, ARIA labels for chips and drag targets.
