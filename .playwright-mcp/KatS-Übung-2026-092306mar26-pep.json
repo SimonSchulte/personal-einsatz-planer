@@ -1,0 +1,405 @@
+{
+  "version": "1.0",
+  "meta": {
+    "exportedAt": "2026-03-09T22:06:40.039Z",
+    "taktischeZeit": "092306mar26",
+    "locale": "de-DE"
+  },
+  "planung": {
+    "id": "24595ef8-efb2-4442-9eb4-09bbe709f9aa",
+    "name": "KatS Übung 2026",
+    "start": "2026-03-21T06:30:00.000Z",
+    "end": "",
+    "posten": [
+      {
+        "id": "bf510e64-d4a5-435a-a3bb-dde191170303",
+        "label": "Neuer Posten",
+        "fahrzeug": null,
+        "positions": []
+      },
+      {
+        "id": "300c1984-3ff3-46b6-9ef9-f1371d48d29d",
+        "label": "Neuer Posten",
+        "fahrzeug": null,
+        "positions": []
+      }
+    ],
+    "einsatzkraefte": [
+      {
+        "id": "54b0368c-c18e-4b9b-88b2-33965bf29546",
+        "name": "Angelius Alexander",
+        "hiorg_org_id": "572544",
+        "tags": {
+          "taktisch": [
+            "ZF"
+          ],
+          "medizinisch": [
+            "SanH"
+          ]
+        }
+      },
+      {
+        "id": "d6b27e9b-407e-4a5b-b9a4-e04823e635f4",
+        "name": "Bollhardt Gero",
+        "hiorg_org_id": "36749",
+        "tags": {
+          "taktisch": [
+            "GF"
+          ],
+          "medizinisch": [
+            "RH"
+          ]
+        }
+      },
+      {
+        "id": "6254c3ab-27df-4597-893d-0149a39bb382",
+        "name": "Kinscher Rene",
+        "hiorg_org_id": "870330",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "RH"
+          ]
+        }
+      },
+      {
+        "id": "f6cccfa5-001e-4b76-8567-fa0719746c3e",
+        "name": "Lissner Nicola-Danica",
+        "hiorg_org_id": "1643170",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "EH"
+          ]
+        }
+      },
+      {
+        "id": "212c048a-6ab8-434f-8657-e87dc98fb4d8",
+        "name": "Hinkelmann Maike",
+        "hiorg_org_id": "366195",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "RH"
+          ]
+        }
+      },
+      {
+        "id": "926bf2c4-0496-4b30-b16e-eb3289edcaec",
+        "name": "Welland Daniel",
+        "hiorg_org_id": "16124",
+        "tags": {
+          "taktisch": [
+            "VF"
+          ],
+          "medizinisch": [
+            "RH"
+          ]
+        }
+      },
+      {
+        "id": "3e50ef42-f312-438d-a53b-04f9a4018015",
+        "name": "Beyer Jan-Niklas",
+        "hiorg_org_id": "1607502",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "SanH"
+          ]
+        }
+      },
+      {
+        "id": "8f27cf32-4628-480f-8dea-ed5c5eefb7c9",
+        "name": "Hellweg Casey Ann",
+        "hiorg_org_id": "396577",
+        "tags": {
+          "taktisch": [
+            "GF"
+          ],
+          "medizinisch": [
+            "NotSan"
+          ]
+        }
+      },
+      {
+        "id": "7daad929-3e39-4717-8d86-80cfa089ab7d",
+        "name": "Schulte Simon",
+        "hiorg_org_id": "32864",
+        "tags": {
+          "taktisch": [
+            "ZF"
+          ],
+          "medizinisch": [
+            "RS"
+          ]
+        }
+      },
+      {
+        "id": "4c2c8c06-289e-446a-9b01-e7d641c9f023",
+        "name": "Stenner Cora",
+        "hiorg_org_id": "1189291",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "SanH"
+          ]
+        }
+      },
+      {
+        "id": "9598d9ce-2cf9-43c2-8614-a4be3da039ab",
+        "name": "Strackerjahn Andreas",
+        "hiorg_org_id": "437365",
+        "tags": {
+          "taktisch": [
+            "GF"
+          ],
+          "medizinisch": [
+            "RH"
+          ]
+        }
+      },
+      {
+        "id": "2099ad17-8391-4093-b77e-d371614a3dbf",
+        "name": "Voß Annemarie",
+        "hiorg_org_id": "1565099",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "SanH"
+          ]
+        }
+      },
+      {
+        "id": "0f56128d-b247-4d8a-be21-d2e9b8bfc57a",
+        "name": "Grohmann Marc-André",
+        "hiorg_org_id": "1605695",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "SanH"
+          ]
+        }
+      },
+      {
+        "id": "00d9272e-17f1-49ce-b1c2-404f38f63913",
+        "name": "Kröger David",
+        "hiorg_org_id": "1419226",
+        "tags": {
+          "taktisch": [
+            "GF"
+          ],
+          "medizinisch": [
+            "RH"
+          ]
+        }
+      },
+      {
+        "id": "65e5bbf6-af48-4538-834b-1ec8488df1ff",
+        "name": "Strahlke Nicolas",
+        "hiorg_org_id": "309428",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "SanH"
+          ]
+        }
+      },
+      {
+        "id": "ba879a67-8bdf-4870-8edd-fc22b537a646",
+        "name": "Wippich Sebastian",
+        "hiorg_org_id": "476087",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "SanH"
+          ]
+        }
+      },
+      {
+        "id": "1967e785-e82c-4599-8d03-d978679b10d4",
+        "name": "Riethig Yvonne",
+        "hiorg_org_id": "17367",
+        "tags": {
+          "taktisch": [
+            "GF"
+          ],
+          "medizinisch": [
+            "RH"
+          ]
+        }
+      },
+      {
+        "id": "1a869e97-5e85-45dd-ad83-af7caff73ab6",
+        "name": "Schmidt Taja",
+        "hiorg_org_id": "1654822",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "RS"
+          ]
+        }
+      },
+      {
+        "id": "4045c76f-6371-46f5-add6-2a51a10f8514",
+        "name": "Schütze Jörg",
+        "hiorg_org_id": "17391",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "SanH"
+          ]
+        }
+      },
+      {
+        "id": "1511aff8-d8c1-45bf-bfaf-6e305513eb7e",
+        "name": "Brinkmeier Julian",
+        "hiorg_org_id": "1678897",
+        "tags": {}
+      },
+      {
+        "id": "3886a741-ca35-49e3-84d0-d8f7fa427736",
+        "name": "Alias Basman",
+        "hiorg_org_id": "1163694",
+        "tags": {
+          "taktisch": [
+            "H"
+          ]
+        }
+      },
+      {
+        "id": "0f624b29-1b45-42da-89ba-f42e9301eb2c",
+        "name": "Kolditz Walter",
+        "hiorg_org_id": "17356",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "SanH"
+          ]
+        }
+      },
+      {
+        "id": "24918cc2-1e2c-4aae-ba70-a36df11fae74",
+        "name": "Hardt Jennifer Julia",
+        "hiorg_org_id": "1565870",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "RS"
+          ]
+        }
+      },
+      {
+        "id": "bf5ab7cc-d86d-491a-9ff1-a681028604fe",
+        "name": "Husemann Frank",
+        "hiorg_org_id": "17382",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "SanH"
+          ]
+        }
+      },
+      {
+        "id": "b655ba39-543c-4ba9-84e7-92ad1e979434",
+        "name": "Ruhose Janosch",
+        "hiorg_org_id": "1674080",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "EH"
+          ]
+        }
+      },
+      {
+        "id": "b20519c9-c7dd-4d96-b5cb-e82c9f977a41",
+        "name": "Extern 1. Helferin SHS Extern",
+        "hiorg_org_id": "1655406",
+        "tags": {}
+      },
+      {
+        "id": "f8f9411c-0275-489a-abec-944ec8d1578b",
+        "name": "Klesse Wolfgang",
+        "hiorg_org_id": "17374",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "RH"
+          ]
+        }
+      },
+      {
+        "id": "e14b3bdf-c295-41d4-b8c5-ab121bace094",
+        "name": "Mittmann Andreas",
+        "hiorg_org_id": "1462745",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "RH"
+          ]
+        }
+      },
+      {
+        "id": "8e422454-bbf1-4105-90e9-ffc6afd6d66e",
+        "name": "Pelz Maik",
+        "hiorg_org_id": "1630172",
+        "tags": {
+          "taktisch": [
+            "H"
+          ],
+          "medizinisch": [
+            "EH"
+          ]
+        }
+      },
+      {
+        "id": "5096b754-b727-4af5-a89b-5a5dc6b7593c",
+        "name": "Wittler Niklas",
+        "hiorg_org_id": "118425",
+        "tags": {
+          "taktisch": [
+            "GF"
+          ],
+          "medizinisch": [
+            "SanH"
+          ]
+        }
+      }
+    ],
+    "einsatzleiter": null,
+    "hiorg_einsatz_id": "16645183"
+  }
+}
