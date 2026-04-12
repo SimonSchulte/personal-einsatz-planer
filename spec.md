@@ -27,7 +27,7 @@ Mode switch is triggered via the API-Key dialog on the Planning List / Dashboard
 - **Actions:** `checkapikey`, `getveranstaltungen`, `getveranstaltung` (with `id`)
 - **Dashboard:** Shows EFS Einsatz list (upcoming / past). Clicking an Einsatz creates a new Planung with `hiorg_einsatz_id` set and loads Einsatzkräfte in the background.
 - **Editor:** Sync button updates Einsatzkräfte from EFS (merge by `hiorg_org_id`, then name).
-- **Qualification mapping:** `med_qual` / `fuehr_qual` strings from EFS are mapped to Taktisch / Medizinisch enum values.
+- **Qualification mapping:** `med_qual` / `fuehr_qual` / `bes_ausbild` strings from EFS are mapped to Taktisch / Medizinisch enum values. Known mappings include `"Notarzt / Notärztin"` → `NA` (via `bes_ausbild`). Unknown strings fall back to `zusatz[]`.
 
 ---
 
@@ -150,6 +150,16 @@ Qualification lists are ordered arrays (lowest → highest). A higher-level qual
 | RS | `#DEE100` | `#000548` |
 | RA, NotSan | `#EB003C` | `#FFFFFF` |
 | A, NA | `#4A6FB8` | `#FFFFFF` |
+
+### Fahrerlaubnis
+
+| Qualifier(s) | Background | Text |
+|---|---|---|
+| B | `#e7e6e6` | `#000548` |
+| C1 | `#2F8F68` | `#FFFFFF` |
+| C | `#4A6FB8` | `#000548` |
+| A | `#00b0f0` | `#FFFFFF` |
+| E | `#7c7c7c` | `#FFFFFF` |
 
 ### Match Visualization
 
@@ -306,6 +316,8 @@ For each requirement type (`taktisch` / `medizinisch`): requirement `R` is satis
 **Display:** `Ist F/UF/H/Ges` vs `Soll F/UF/H/Ges` — shown per Posten (panel header) and overall (pane header). Each Ist value is color-coded against its Soll value (see Stärke-Farbkodierung).
 
 **Soll** is derived from the `requirements.taktisch` fields of the Positions within the Posten.
+
+**Ist-Rolle:** Eine eingeteile Einsatzkraft wird für die IST-Zählung nach der Anforderung (`requirements.taktisch`) der Position eingestuft, auf der sie eingeteilt ist — **nicht** nach ihrer eigenen höchsten Qualifikation. Damit spiegelt der IST-Wert den tatsächlichen Einsatz wider (z. B. zählt eine ZF auf einer H-Position als Helfer).
 
 ### Accessibility
 

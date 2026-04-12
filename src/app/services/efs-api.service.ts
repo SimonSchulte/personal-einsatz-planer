@@ -204,6 +204,7 @@ export class EfsApiService {
       'Notfallsanitäter/in': 'NotSan',
       'Arzt/Ärztin': 'A',
       'Notarzt': 'NA',
+      'Notarzt / Notärztin': 'NA',
     };
     const taktMap: Record<string, string> = {
       'Helfer:in in Ausbildung': 'H',

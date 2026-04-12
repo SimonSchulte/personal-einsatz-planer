@@ -217,8 +217,35 @@ export class PlanningEditor {
 
   readonly draggingEinsatzkraft = signal<Einsatzkraft | null>(null);
   readonly assignedListCollapsed = signal(true);
+  readonly rosterProgress = computed(() => {
+    const p = this.planung();
+    if (!p) return null;
+    const total = p.einsatzkraefte.length;
+    const assigned = total - this.unassignedRoster(p).length;
+    const soll = p.posten.reduce((acc, po) => acc + po.positions.length, 0);
+    return { assigned, total, soll };
+  });
   readonly rosterSearch = signal('');
   readonly rosterTagFilter = signal<string | null>(null);
+  readonly rosterAvailableTags = computed(() => {
+    const p = this.planung();
+    if (!p) return { taktisch: [] as Taktisch[], medizinisch: [] as Medizinisch[] };
+    const tSet = new Set<Taktisch>();
+    const mSet = new Set<Medizinisch>();
+    for (const ek of p.einsatzkraefte) {
+      (ek.tags.taktisch ?? []).forEach((t) => tSet.add(t));
+      (ek.tags.medizinisch ?? []).forEach((t) => mSet.add(t));
+    }
+    return {
+      taktisch: TAKTISCH_ORDER.filter((t) => tSet.has(t)),
+      medizinisch: MEDIZINISCH_ORDER.filter((t) => mSet.has(t)),
+    };
+  });
+
+  toggleRosterTagFilter(tag: string): void {
+    this.rosterTagFilter.update((c) => (c === tag ? null : tag));
+  }
+
   readonly filteredRoster = computed(() => {
     const p = this.planung();
     if (!p) return [];
@@ -392,6 +419,10 @@ export class PlanningEditor {
     return this.matchLevel(position, einsatzkraft);
   }
 
+  unassignFromPosition(postenId: string, positionId: string): void {
+    this.store.unassignFromPosition(postenId, positionId);
+  }
+
   private matchLevel(position: Position, person: Einsatzkraft): MatchLevel {
     const req = position.requirements;
     let satisfied = 0;
@@ -445,10 +476,7 @@ export class PlanningEditor {
   postenIst(posten: Posten): Staerke {
     const assigned = posten.positions.filter((p) => p.assigned);
     const s = { fuhrer: 0, unterfuehrer: 0, helfer: 0, gesamt: assigned.length };
-    for (const pos of assigned) {
-      const person = this.planung()!.einsatzkraefte.find((e) => e.id === pos.assigned!.id);
-      s[person ? this.istRole(person) : 'helfer']++;
-    }
+    for (const pos of assigned) s[this.sollRole(pos.requirements.taktisch)]++;
     return s;
   }
 
@@ -462,10 +490,7 @@ export class PlanningEditor {
   planungIst(planung: Planung): Staerke {
     const assigned = planung.posten.flatMap((p) => p.positions).filter((p) => p.assigned);
     const s = { fuhrer: 0, unterfuehrer: 0, helfer: 0, gesamt: assigned.length };
-    for (const pos of assigned) {
-      const person = planung.einsatzkraefte.find((e) => e.id === pos.assigned!.id);
-      s[person ? this.istRole(person) : 'helfer']++;
-    }
+    for (const pos of assigned) s[this.sollRole(pos.requirements.taktisch)]++;
     return s;
   }
 
