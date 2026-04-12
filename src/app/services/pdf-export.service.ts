@@ -259,7 +259,7 @@ export class PdfExportService {
       case 'NA':
         return { fillColor: CI_BLUE, color: '#FFFFFF' };
       default:
-        return { fillColor: '#E0E0E0', color: '#333333' };
+        return { fillColor: '#E8E8E8', color: '#424242' };
     }
   }
 }
