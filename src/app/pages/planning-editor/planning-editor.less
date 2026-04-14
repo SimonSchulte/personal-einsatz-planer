@@ -513,6 +513,28 @@
   }
 }
 
+.posten-telefon-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+
+  .telefon-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: rgba(0, 0, 0, 0.45);
+    flex-shrink: 0;
+  }
+
+  span {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.60);
+    user-select: text;
+  }
+}
+
 .fahrzeug-inline-input {
   background: transparent;
   border: none;
@@ -566,6 +588,13 @@
   }
 }
 
+.position-label-cell {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
 .position-label-input {
   background: transparent;
   border: none;
@@ -577,7 +606,8 @@
   padding: 2px 4px;
   margin: -2px -4px;
   border-radius: 4px 4px 0 0;
-  width: calc(100% + 8px);
+  flex: 1;
+  min-width: 0;
   transition: border-color 0.15s, background 0.15s;
 
   &:hover {
@@ -890,5 +920,31 @@
 }
 
 .position-row:hover .unassign-btn {
+  opacity: 1;
+}
+
+/* ---- Postenführer button on position rows ---- */
+.postenfuehrer-btn {
+  width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  color: rgba(0, 0, 0, 0.35);
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &--active {
+    opacity: 1 !important;
+    color: var(--ci-dark-blue);
+  }
+}
+
+.position-row:hover .postenfuehrer-btn {
   opacity: 1;
 }

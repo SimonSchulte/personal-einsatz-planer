@@ -582,6 +582,10 @@ export class PlanningEditor {
     this.store.addPosition(postenId);
   }
 
+  togglePostenfuehrer(postenId: string, positionId: string, current: boolean): void {
+    this.store.setPostenfuehrer(postenId, positionId, !current);
+  }
+
   updatePostenLabel(postenId: string, label: string): void {
     this.store.updatePostenLabel(postenId, label);
   }

@@ -79,6 +79,7 @@ export class ImportService {
         ...(medizinisch.length ? { medizinisch } : {}),
         ...(zusatz.length ? { zusatz } : {}),
       },
+      telefonnummer: ek.telefonnummer,
     };
   }
 }

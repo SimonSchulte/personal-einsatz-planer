@@ -49,6 +49,7 @@ interface EfsApiEinsatzkraft {
   med_qual?: string;
   fuehr_qual?: string;
   bes_ausbild?: string;
+  tel_mobil?: string;
 }
 
 interface EfsApiDetailResponse extends EfsApiEnvelope {
@@ -190,6 +191,7 @@ export class EfsApiService {
       vorname: e.vorname ?? '',
       nachname: e.nachname ?? '',
       ausbildungen: this.qualToAusbildungen(e),
+      telefonnummer: e.tel_mobil ?? undefined,
     };
   }
 

@@ -122,42 +122,49 @@ export class PdfExportService {
 
   private buildPostenBlock(posten: Posten, planung: Planung): Content[] {
     // CI-Navy Posten header
-    const headerCells: Content[] = posten.fahrzeug
-      ? [
-          {
-            text: posten.label,
-            color: '#FFFFFF',
-            bold: true,
-            fontSize: 12,
-            fillColor: CI_NAVY,
-            margin: [6, 4, 4, 4],
-            border: [false, false, false, false],
-          } as Content,
-          {
-            text: posten.fahrzeug.funkruf,
-            color: CI_LIGHT_GRAY,
-            bold: false,
-            fontSize: 12,
-            fillColor: CI_NAVY,
-            margin: [0, 4, 6, 4],
-            border: [false, false, false, false],
-          } as Content,
-        ]
-      : [
-          {
-            text: posten.label,
-            color: '#FFFFFF',
-            bold: true,
-            fontSize: 12,
-            fillColor: CI_NAVY,
-            margin: [6, 4, 6, 4],
-            border: [false, false, false, false],
-          } as Content,
-        ];
+    const headerCells: Content[] = [
+      {
+        text: posten.label,
+        color: '#FFFFFF',
+        bold: true,
+        fontSize: 12,
+        fillColor: CI_NAVY,
+        margin: [6, 4, 4, 4],
+        border: [false, false, false, false],
+      } as Content,
+    ];
+
+    const headerWidths: (string | number)[] = ['*'];
+
+    if (posten.fahrzeug) {
+      headerCells.push({
+        text: posten.fahrzeug.funkruf,
+        color: CI_LIGHT_GRAY,
+        bold: false,
+        fontSize: 12,
+        fillColor: CI_NAVY,
+        margin: [0, 4, 6, 4],
+        border: [false, false, false, false],
+      } as Content);
+      headerWidths.push('auto');
+    }
+
+    if (posten.telefonnummer) {
+      headerCells.push({
+        text: `\u260E ${posten.telefonnummer}`,
+        color: CI_LIGHT_GRAY,
+        bold: false,
+        fontSize: 11,
+        fillColor: CI_NAVY,
+        margin: [0, 4, 6, 4],
+        border: [false, false, false, false],
+      } as Content);
+      headerWidths.push('auto');
+    }
 
     const postenHeader: Content = {
       table: {
-        widths: posten.fahrzeug ? ['*', 'auto'] : ['*'],
+        widths: headerWidths,
         body: [headerCells],
       },
       layout: 'noBorders',

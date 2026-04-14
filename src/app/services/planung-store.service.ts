@@ -87,17 +87,37 @@ export class PlanungStoreService {
     this.updateActive({ ...active, posten: active.posten.filter((p) => p.id !== postenId) });
   }
 
+  private syncPostenfuehrerPhone(posten: Posten, einsatzkraefte: Einsatzkraft[]): Posten {
+    const pf = posten.positions.find((pos) => pos.isPostenfuehrer);
+    const ek = pf?.assigned ? einsatzkraefte.find((e) => e.id === pf.assigned!.id) : undefined;
+    return { ...posten, telefonnummer: ek?.telefonnummer ?? undefined };
+  }
+
+  setPostenfuehrer(postenId: string, positionId: string, value: boolean): void {
+    const active = this._active();
+    if (!active) return;
+    const newPosten = active.posten.map((p) => {
+      if (p.id !== postenId) return p;
+      const updatedPositions = p.positions.map((pos) => ({
+        ...pos,
+        isPostenfuehrer: value && pos.id === positionId ? true : undefined,
+      }));
+      return this.syncPostenfuehrerPhone({ ...p, positions: updatedPositions }, active.einsatzkraefte);
+    });
+    this.updateActive({ ...active, posten: newPosten });
+  }
+
   clearPosten(postenId: string): void {
     const active = this._active();
     if (!active) return;
-    this.updateActive({
-      ...active,
-      posten: active.posten.map((p) =>
-        p.id === postenId
-          ? { ...p, positions: p.positions.map((pos) => ({ ...pos, assigned: null })) }
-          : p,
-      ),
+    const newPosten = active.posten.map((p) => {
+      if (p.id !== postenId) return p;
+      return this.syncPostenfuehrerPhone(
+        { ...p, positions: p.positions.map((pos) => ({ ...pos, assigned: null })) },
+        active.einsatzkraefte,
+      );
     });
+    this.updateActive({ ...active, posten: newPosten });
   }
 
   assignToPosition(postenId: string, positionId: string, einsatzkraftId: string): void {
@@ -105,19 +125,17 @@ export class PlanungStoreService {
     if (!active) return;
     const ek = active.einsatzkraefte.find((e) => e.id === einsatzkraftId);
     if (!ek) return;
-    this.updateActive({
-      ...active,
-      posten: active.posten.map((p) =>
-        p.id === postenId
-          ? {
-              ...p,
-              positions: p.positions.map((pos) =>
-                pos.id === positionId ? { ...pos, assigned: { id: ek.id, name: ek.name } } : pos,
-              ),
-            }
-          : p,
-      ),
+    const newPosten = active.posten.map((p) => {
+      if (p.id !== postenId) return p;
+      const updated = {
+        ...p,
+        positions: p.positions.map((pos) =>
+          pos.id === positionId ? { ...pos, assigned: { id: ek.id, name: ek.name } } : pos,
+        ),
+      };
+      return this.syncPostenfuehrerPhone(updated, active.einsatzkraefte);
     });
+    this.updateActive({ ...active, posten: newPosten });
   }
 
   moveEinsatzkraftToPosition(ekId: string, toPostenId: string, toPositionId: string): void {
@@ -125,9 +143,8 @@ export class PlanungStoreService {
     if (!active) return;
     const ek = active.einsatzkraefte.find((e) => e.id === ekId);
     if (!ek) return;
-    this.updateActive({
-      ...active,
-      posten: active.posten.map((p) => ({
+    const newPosten = active.posten.map((p) => {
+      const updated = {
         ...p,
         positions: p.positions.map((pos) => {
           if (pos.assigned?.id === ekId && !(p.id === toPostenId && pos.id === toPositionId)) {
@@ -138,8 +155,10 @@ export class PlanungStoreService {
           }
           return pos;
         }),
-      })),
+      };
+      return this.syncPostenfuehrerPhone(updated, active.einsatzkraefte);
     });
+    this.updateActive({ ...active, posten: newPosten });
   }
 
   importPlanung(planung: Planung): void {
@@ -182,12 +201,15 @@ export class PlanungStoreService {
       )
       .map((e) => e.name);
 
-    const newPosten = active.posten.map((p) => ({
-      ...p,
-      positions: p.positions.map((pos) =>
-        pos.assigned && removedIds.has(pos.assigned.id) ? { ...pos, assigned: null } : pos,
-      ),
-    }));
+    const newPosten = active.posten.map((p) => {
+      const updated = {
+        ...p,
+        positions: p.positions.map((pos) =>
+          pos.assigned && removedIds.has(pos.assigned.id) ? { ...pos, assigned: null } : pos,
+        ),
+      };
+      return this.syncPostenfuehrerPhone(updated, merged);
+    });
 
     this.updateActive({ ...active, einsatzkraefte: merged, posten: newPosten });
     return { removedNames: removed.map((e) => e.name), affectedAssignments };
@@ -287,20 +309,23 @@ export class PlanungStoreService {
       template.einsatzkraefte.map((e) => [e.id, e.hiorg_org_id]),
     );
 
-    const resolvedPosten = template.posten.map((posten) => ({
-      ...posten,
-      id: crypto.randomUUID(),
-      positions: posten.positions.map((pos) => {
-        if (!pos.assigned) return { ...pos, id: crypto.randomUUID() };
-        const templateHiorgId = templateEkMap.get(pos.assigned.id);
-        const matched = templateHiorgId ? hiorgMap.get(templateHiorgId) : undefined;
-        return {
-          ...pos,
-          id: crypto.randomUUID(),
-          assigned: matched ? { id: matched.id, name: matched.name } : null,
-        };
-      }),
-    }));
+    const resolvedPosten = template.posten.map((posten) => {
+      const updated = {
+        ...posten,
+        id: crypto.randomUUID(),
+        positions: posten.positions.map((pos) => {
+          if (!pos.assigned) return { ...pos, id: crypto.randomUUID() };
+          const templateHiorgId = templateEkMap.get(pos.assigned.id);
+          const matched = templateHiorgId ? hiorgMap.get(templateHiorgId) : undefined;
+          return {
+            ...pos,
+            id: crypto.randomUUID(),
+            assigned: matched ? { id: matched.id, name: matched.name } : null,
+          };
+        }),
+      };
+      return this.syncPostenfuehrerPhone(updated, active.einsatzkraefte);
+    });
 
     const isHiorgLinked = !!active.hiorg_einsatz_id;
     this.updateActive({
@@ -318,19 +343,17 @@ export class PlanungStoreService {
   unassignFromPosition(postenId: string, positionId: string): void {
     const active = this._active();
     if (!active) return;
-    this.updateActive({
-      ...active,
-      posten: active.posten.map((p) =>
-        p.id === postenId
-          ? {
-              ...p,
-              positions: p.positions.map((pos) =>
-                pos.id === positionId ? { ...pos, assigned: null } : pos,
-              ),
-            }
-          : p,
-      ),
+    const newPosten = active.posten.map((p) => {
+      if (p.id !== postenId) return p;
+      const updated = {
+        ...p,
+        positions: p.positions.map((pos) =>
+          pos.id === positionId ? { ...pos, assigned: null } : pos,
+        ),
+      };
+      return this.syncPostenfuehrerPhone(updated, active.einsatzkraefte);
     });
+    this.updateActive({ ...active, posten: newPosten });
   }
 
   addPosition(postenId: string): void {
