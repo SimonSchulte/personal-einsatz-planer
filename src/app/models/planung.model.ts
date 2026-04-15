@@ -34,6 +34,7 @@ export interface Position {
   label: string;
   requirements: Requirements;
   assigned: EinsatzkraftRef | null;
+  isPostenfuehrer?: boolean;
 }
 
 export interface Posten {
@@ -42,6 +43,7 @@ export interface Posten {
   fahrzeug: FahrzeugRef | null;
   positions: Position[];
   hiorg_schicht_id?: string;
+  telefonnummer?: string;
 }
 
 export interface Einsatzkraft {
@@ -56,6 +58,7 @@ export interface Einsatzkraft {
   meta?: { notes?: string };
   /** HiOrg-Server org-scoped ID; set when imported from EFS-API */
   hiorg_org_id?: string;
+  telefonnummer?: string;
 }
 
 export interface Planung {
@@ -102,6 +105,7 @@ export interface EfsEinsatzkraft {
   vorname: string;
   nachname: string;
   ausbildungen?: string[];
+  telefonnummer?: string;
 }
 
 export interface EfsEinsatzmittel {

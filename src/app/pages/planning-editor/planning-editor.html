@@ -341,6 +341,12 @@
                       }
                     </mat-autocomplete>
                   </div>
+                  @if (posten.telefonnummer) {
+                    <div class="posten-telefon-inline" (click)="$event.stopPropagation()">
+                      <mat-icon class="telefon-icon">phone</mat-icon>
+                      <span>{{ posten.telefonnummer }}</span>
+                    </div>
+                  }
                 </mat-panel-title>
                 <mat-panel-description (click)="$event.stopPropagation()">
                   <div class="staerke-block compact description-spacer" role="grid" [attr.aria-label]="'Stärke ' + posten.label">
@@ -384,10 +390,18 @@
               <div class="position-list">
                 @for (position of posten.positions; track position.id) {
                   <div class="position-row" (contextmenu)="onPositionContextMenu($event, posten.id, position.id)">
-                    <input class="position-label-input"
-                           [value]="position.label"
-                           (click)="$event.stopPropagation()"
-                           (blur)="updatePositionLabel(posten.id, position.id, $any($event.target).value)" />
+                    <div class="position-label-cell">
+                      <button mat-icon-button class="postenfuehrer-btn"
+                              [class.postenfuehrer-btn--active]="position.isPostenfuehrer"
+                              matTooltip="Postenführer"
+                              (click)="togglePostenfuehrer(posten.id, position.id, !!position.isPostenfuehrer); $event.stopPropagation()">
+                        <img [src]="postenfuehrerIconUrl" class="postenfuehrer-tz-icon" alt="Postenführer">
+                      </button>
+                      <input class="position-label-input"
+                             [value]="position.label"
+                             (click)="$event.stopPropagation()"
+                             (blur)="updatePositionLabel(posten.id, position.id, $any($event.target).value)" />
+                    </div>
                     <div class="position-reqs">
                       <button class="req-chip-btn" [matMenuTriggerFor]="taktischMenu" (click)="$event.stopPropagation()">
                         @if (position.requirements.taktisch) {

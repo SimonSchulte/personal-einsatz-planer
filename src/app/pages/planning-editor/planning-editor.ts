@@ -1,5 +1,7 @@
 import { Component, computed, inject, signal, ViewChild } from '@angular/core';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { erzeugeTaktischesZeichen } from 'taktische-zeichen-core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -95,6 +97,10 @@ export class PlanningEditor {
   private readonly efsApi = inject(EfsApiService);
   private readonly importService = inject(ImportService);
   private readonly pdfExport = inject(PdfExportService);
+  private readonly sanitizer = inject(DomSanitizer);
+  readonly postenfuehrerIconUrl: SafeUrl = this.sanitizer.bypassSecurityTrustUrl(
+    erzeugeTaktischesZeichen({ grundzeichen: 'person', funktion: 'fuehrungskraft' }).dataUrl
+  );
 
   readonly planung = this.store.active;
   readonly canUndo = this.store.canUndo;
@@ -580,6 +586,10 @@ export class PlanningEditor {
 
   addPosition(postenId: string): void {
     this.store.addPosition(postenId);
+  }
+
+  togglePostenfuehrer(postenId: string, positionId: string, current: boolean): void {
+    this.store.setPostenfuehrer(postenId, positionId, !current);
   }
 
   updatePostenLabel(postenId: string, label: string): void {
