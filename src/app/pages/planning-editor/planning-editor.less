@@ -930,21 +930,30 @@
   line-height: 24px !important;
   flex-shrink: 0;
   opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
-  color: rgba(0, 0, 0, 0.35);
+  border-radius: 50%;
+  outline: 2px dashed transparent;
+  outline-offset: 1px;
+  transition: opacity 0.15s, outline-color 0.15s, background-color 0.15s;
 
-  mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
+  .postenfuehrer-tz-icon {
+    width: 20px;
+    height: auto;
+    display: block;
   }
 
   &--active {
     opacity: 1 !important;
-    color: var(--ci-dark-blue);
+    outline: 2px solid var(--ci-blue) !important;
+    outline-offset: 1px;
+    background-color: color-mix(in srgb, var(--ci-blue) 12%, transparent) !important;
   }
 }
 
 .position-row:hover .postenfuehrer-btn {
   opacity: 1;
+  outline-color: rgba(0, 0, 0, 0.28);
+}
+
+.position-row:hover .postenfuehrer-btn--active {
+  outline-color: var(--ci-blue);
 }

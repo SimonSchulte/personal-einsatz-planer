@@ -395,7 +395,7 @@
                               [class.postenfuehrer-btn--active]="position.isPostenfuehrer"
                               matTooltip="Postenführer"
                               (click)="togglePostenfuehrer(posten.id, position.id, !!position.isPostenfuehrer); $event.stopPropagation()">
-                        <mat-icon>{{ position.isPostenfuehrer ? 'star' : 'star_outline' }}</mat-icon>
+                        <img [src]="postenfuehrerIconUrl" class="postenfuehrer-tz-icon" alt="Postenführer">
                       </button>
                       <input class="position-label-input"
                              [value]="position.label"
