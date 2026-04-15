@@ -1,6 +1,3 @@
-<div class="mobile-unsupported">
-  Diese Anwendung ist für Desktop-Geräte optimiert (mind. 1024px Breite).
-</div>
 <mat-toolbar color="primary">
   <mat-icon>assignment</mat-icon>
   <span class="toolbar-title">Personaleinsatzplanung</span>
@@ -8,11 +5,17 @@
   <button mat-icon-button [matTooltip]="appMode.mode() === 'connected-to-efs-api' ? 'HiOrg-Server verbunden' : 'HiOrg-Server verbinden'" (click)="openApiKeyDialog()" class="toolbar-btn">
     <mat-icon>{{ appMode.mode() === 'connected-to-efs-api' ? 'cloud_done' : 'cloud_off' }}</mat-icon>
   </button>
-  <button mat-stroked-button (click)="loadFromFile()" class="toolbar-btn">
+  <button mat-icon-button matTooltip="Datei öffnen" (click)="loadFromFile()" class="toolbar-btn toolbar-btn--icon-only">
+    <mat-icon>folder_open</mat-icon>
+  </button>
+  <button mat-stroked-button (click)="loadFromFile()" class="toolbar-btn toolbar-btn--with-text">
     <mat-icon>folder_open</mat-icon>
     Datei öffnen
   </button>
-  <button mat-raised-button color="secondary" (click)="createNew()" class="toolbar-btn">
+  <button mat-icon-button matTooltip="Neue Planung" color="secondary" (click)="createNew()" class="toolbar-btn toolbar-btn--icon-only">
+    <mat-icon>add</mat-icon>
+  </button>
+  <button mat-raised-button color="secondary" (click)="createNew()" class="toolbar-btn toolbar-btn--with-text">
     <mat-icon>add</mat-icon>
     Neue Planung
   </button>
@@ -60,8 +63,8 @@
             <th mat-header-cell *matHeaderCellDef>Ort</th>
             <td mat-cell *matCellDef="let g">{{ g.ort ?? '–' }}</td>
           </ng-container>
-          <tr mat-header-row *matHeaderRowDef="einsatzColumns"></tr>
-          <tr mat-row *matRowDef="let g; columns: einsatzColumns" class="einsatz-row" (click)="openEfsGruppe(g)"></tr>
+          <tr mat-header-row *matHeaderRowDef="einsatzColumns()"></tr>
+          <tr mat-row *matRowDef="let g; columns: einsatzColumns()" class="einsatz-row" (click)="openEfsGruppe(g)"></tr>
         </table>
       }
 
@@ -89,8 +92,8 @@
             <th mat-header-cell *matHeaderCellDef>Ort</th>
             <td mat-cell *matCellDef="let g">{{ g.ort ?? '–' }}</td>
           </ng-container>
-          <tr mat-header-row *matHeaderRowDef="einsatzColumns"></tr>
-          <tr mat-row *matRowDef="let g; columns: einsatzColumns" class="einsatz-row" (click)="openEfsGruppe(g)"></tr>
+          <tr mat-header-row *matHeaderRowDef="einsatzColumns()"></tr>
+          <tr mat-row *matRowDef="let g; columns: einsatzColumns()" class="einsatz-row" (click)="openEfsGruppe(g)"></tr>
         </table>
       }
 

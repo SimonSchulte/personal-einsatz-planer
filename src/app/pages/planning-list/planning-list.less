@@ -130,3 +130,33 @@
 /* M-4: Toolbar CSS classes */
 .toolbar-title { margin-left: 8px; }
 .toolbar-btn { margin-left: 8px; }
+
+/* ---- Mobile responsive ---- */
+.toolbar-btn--icon-only { display: none; }
+
+@media (max-width: 767px) {
+  .list-content {
+    padding: 16px;
+  }
+
+  .toolbar-title {
+    font-size: 0.9rem;
+  }
+
+  .toolbar-btn--with-text {
+    display: none;
+  }
+
+  .toolbar-btn--icon-only {
+    display: inline-flex;
+    color: rgba(255, 255, 255, 0.87) !important;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .einsatz-table {
+    font-size: 0.8rem;
+  }
+}
