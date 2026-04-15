@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -19,6 +20,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
 import { DragDropModule, CdkDragDrop, CdkDragStart } from '@angular/cdk/drag-drop';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { PlanungStoreService } from '../../services/planung-store.service';
 import { SaveLoadService } from '../../services/save-load.service';
 import { AppModeService } from '../../services/app-mode.service';
@@ -63,6 +67,7 @@ interface Staerke {
 @Component({
   selector: 'app-planning-editor',
   imports: [
+    DatePipe,
     MatButtonModule,
     MatDialogModule,
     MatIconModule,
@@ -95,6 +100,12 @@ export class PlanningEditor {
   private readonly efsApi = inject(EfsApiService);
   private readonly importService = inject(ImportService);
   private readonly pdfExport = inject(PdfExportService);
+  private readonly bp = inject(BreakpointObserver);
+
+  readonly isMobile = toSignal(
+    this.bp.observe('(max-width: 767px)').pipe(map((r) => r.matches)),
+    { initialValue: false },
+  );
 
   readonly planung = this.store.active;
   readonly canUndo = this.store.canUndo;

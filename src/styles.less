@@ -210,25 +210,6 @@ a[mat-stroked-button][color='secondary'] {
 }
 
 
-/* Mobile guard overlay */
-.mobile-unsupported {
-  display: none;
-}
-@media (max-width: 1023px) {
-  .mobile-unsupported {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: #ffffff;
-    color: #212121;
-    padding: 24px;
-    text-align: center;
-    font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
-    font-size: 1rem;
-  }
-}
+/* Mobile breakpoint utilities */
+@mobile-breakpoint: 767px;
+@tablet-breakpoint: 1023px;

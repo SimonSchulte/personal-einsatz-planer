@@ -11,6 +11,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { PlanungStoreService } from '../../services/planung-store.service';
 import { SaveLoadService } from '../../services/save-load.service';
 import { AppModeService } from '../../services/app-mode.service';
@@ -44,6 +47,12 @@ export class PlanningList implements OnInit {
   readonly appMode = inject(AppModeService);
   private readonly efsApi = inject(EfsApiService);
   private readonly importService = inject(ImportService);
+  private readonly bp = inject(BreakpointObserver);
+
+  readonly isMobile = toSignal(
+    this.bp.observe('(max-width: 767px)').pipe(map((r) => r.matches)),
+    { initialValue: false },
+  );
 
   readonly planungen = this.store.planungen;
 
@@ -69,7 +78,9 @@ export class PlanningList implements OnInit {
       .sort((a, b) => new Date(b.datum_von).getTime() - new Date(a.datum_von).getTime()),
   );
 
-  readonly einsatzColumns = ['titel', 'datum_von', 'datum_bis', 'ort'];
+  readonly einsatzColumns = computed(() =>
+    this.isMobile() ? ['titel', 'datum_von'] : ['titel', 'datum_von', 'datum_bis', 'ort'],
+  );
 
   ngOnInit(): void {
     if (this.appMode.mode() === 'connected-to-efs-api') {
